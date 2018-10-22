@@ -23,7 +23,7 @@
 -- Description:    VID signal generator with AXI interface
 --
 -- Engineer:       Marian Pristach
--- Revision:       1.0.0 (01.03.2018)
+-- Revision:       1.0.1 (22.10.2018)
 --
 -- Comments:       Template generated using Vivado Design Suite 2017.4
 ----------------------------------------------------------------------------------------------------
@@ -180,8 +180,9 @@ architecture arch_imp of vid_gen_v1_0_S00_AXI is
 	signal fsm_d     : fsm_type_t;
 	signal fsm_q     : fsm_type_t;
 
-	-- 1 bit temporary output
-	signal vid_tmp   : std_logic;
+	-- 1 bit temporary output register
+	signal vid_tmp_d : std_logic;
+	signal vid_tmp_q : std_logic;
 
 begin
 	-- I/O Connections assignments
@@ -544,15 +545,26 @@ begin
 
 	------------------------------------------------------------------------------------------------
 	-- output decoder
-	vid_tmp <=
+	vid_tmp_d <=
 		'1' when ((fsm_q = st_sync) and (cnt_q(3) = '0')) else
 		'1' when ((fsm_q = st_data) and (cnt_q(1 downto 0) = "00")) else
 		'1' when ((fsm_q = st_data) and (cnt_q(1 downto 0) = "01") and (data_q(0) = '1')) else
 		'1' when ((fsm_q = st_data) and (cnt_q(1 downto 0) = "10") and (data_q(0) = '1')) else
 		'0';
 
-	-- N-bit output signal
-	VID_OUTPUT <= (others => '1') when (vid_tmp = '1') else (others => '0');
+	-- output register
+	p_vid_reg: process (S_AXI_ACLK) begin
+		if rising_edge(S_AXI_ACLK) then
+			if (S_AXI_ARESETN = '0') then
+				vid_tmp_q <= '0';
+			else
+				vid_tmp_q <= vid_tmp_d;
+			end if;
+		end if;
+	end process;
+
+	-- N-bit output signal from register
+	VID_OUTPUT <= (others => '1') when (vid_tmp_q = '1') else (others => '0');
 
 	------------------------------------------------------------------------------------------------
 	-- User logic ends
