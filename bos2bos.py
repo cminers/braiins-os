@@ -185,7 +185,7 @@ def firmware_deploy(args, firmware_dir, stage2_dir, md5_digest):
         sftp.put(miner_cfg_config, MINER_CFG_CONFIG)
         sftp.close()
 
-        rewrite_miner_cfg = not check_miner_cfg(ssh)
+        rewrite_miner_cfg = args.rewrite_config or not check_miner_cfg(ssh)
         config = get_config(args, ssh, rewrite_miner_cfg)
 
         mdt_write(ssh, boot_bin, 'boot', 'SPL')
@@ -256,6 +256,8 @@ if __name__ == "__main__":
                         help='hostname of miner with bos firmware')
     parser.add_argument('--config',
                         help='path to configuration file')
+    parser.add_argument('--rewrite-config', action='store_true',
+                        help='force rewriting all miner settings with new/default configuration')
     parser.add_argument('--mac',
                         help='override MAC address')
     parser.add_argument('--force', action='store_true',
