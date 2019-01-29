@@ -57,15 +57,15 @@ build:
   #   supported components - command, spl, uboot, fpga
   sysupgrade:
     zynq-dm1-g9:
-      require: '2018-09-22-0-c169f7bc'
+      require: 2018-09-22-0-c169f7bc
     zynq-dm1-g19:
-      require: '2018-09-22-0-2a866bfc'
+      require: 2018-09-22-0-2a866bfc
     zynq-dm1:
       major: no
       include: [command]
     zynq-am1:
       major: no
-      require: '2018-10-24-0-9e5687a2'
+      require: 2018-10-24-0-9e5687a2
       include: [command]
 
 remote:
