@@ -20,12 +20,14 @@ import copy
 from collections import namedtuple
 from ruamel import yaml
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
+from nulltype import Null, Empty
 
 YAML_DICT_TYPE = CommentedMap
 YAML_LIST_TYPE = CommentedSeq
 
 EmptyDict = CommentedMap
 EmptyList = CommentedSeq
+EmptyValue = Empty
 
 
 class ConfigWrapper:
@@ -156,8 +158,10 @@ class ConfigWrapper:
             ConfigWrapper object with value get from `YAML` dictionary.
         """
         if self.is_dict():
-            result = self._root.get(item)
-            if result is not None:
+            result = self._root.get(item, Null)
+            if result is not Null:
+                if result is None:
+                    result = EmptyValue
                 return ConfigWrapper(result, path=self._join_attribute(item), formatter=self.formatter)
         raise AttributeError("Configuration '{}' has no attribute '{}'".format(self.path, item))
 
@@ -217,8 +221,13 @@ class ConfigWrapper:
         :return:
             Value of item or default value when item is not set.
         """
-        value = self._root[item] if item in self._root else None
-        return ConfigWrapper(value, formatter=self.formatter) if value is not None else default
+        if item in self._root:
+            value = self._root[item]
+            if value is None:
+                value = EmptyValue
+            return ConfigWrapper(value, formatter=self.formatter)
+        else:
+            return default
 
     def get(self, path, default=None):
         """

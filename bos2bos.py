@@ -18,7 +18,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import argparse
-import subprocess
 import tarfile
 import shutil
 import miner
@@ -119,7 +118,7 @@ def check_miner_cfg(ssh):
 
 def set_miner_cfg(ssh, config, rewrite_miner_cfg):
     miner_cfg_input = io.BytesIO()
-    if not nand.write_miner_cfg_input(config, miner_cfg_input, use_default=rewrite_miner_cfg):
+    if not nand.write_miner_cfg_input(config, miner_cfg_input, use_default=rewrite_miner_cfg, ignore_empty=False):
         raise RestoreStop
     miner_cfg_input = miner_cfg_input.getvalue()
 

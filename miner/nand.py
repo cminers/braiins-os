@@ -19,6 +19,8 @@ import logging
 
 import miner.hwid as hwid
 
+from miner.config import EmptyValue
+
 MINER_FIRMWARE = 'firmware'
 MINER_ENV_SIZE = 0x20000
 MINER_CFG_SIZE = 0x20000
@@ -59,7 +61,7 @@ MINER_CFG_INPUT = [
 ]
 
 
-def write_miner_cfg_input(config, stream, excluded=None, use_default=True):
+def write_miner_cfg_input(config, stream, excluded=None, use_default=True, ignore_empty=True):
     """
     Write to the stream miner configuration input for NAND
 
@@ -69,6 +71,10 @@ def write_miner_cfg_input(config, stream, excluded=None, use_default=True):
         Opened stream for writing miner configuration input.
     :excluded:
         Dictionary with excluded attributes.
+    :use_default:
+        Use default value for omitted attributes.
+    :ignore_empty:
+        Not include empty attributes to output for removing it from NAND.
     """
     excluded = excluded or set()
     for name, path, default in MINER_CFG_INPUT:
@@ -89,4 +95,6 @@ def write_miner_cfg_input(config, stream, excluded=None, use_default=True):
                 elif value.is_list():
                     value = ','.join(value)
             stream.write('{}={}\n'.format(name, value).encode())
+        elif value is EmptyValue and not ignore_empty:
+            stream.write('{}\n'.format(name).encode())
     return True
