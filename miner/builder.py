@@ -2143,17 +2143,21 @@ class Builder:
                 'HEAD detached at {}'.format(repo.head.object.hexsha[:8])
             logging.info("Status for '{}': '{}' ({})".format(name, working_dir, branch_name))
             if not repo.head.is_detached:
-                commits_ahead, commits_behind = self._count_commits(repo, branch_name)
-                if commits_ahead and commits_behind:
-                    print(colored("Your branch and 'origin/{}' have diverged,".format(branch_name), 'magenta'))
-                    print(colored("and have {} and {} different commits each, respectively."
-                                  .format(commits_ahead, commits_behind), 'magenta'))
-                elif commits_ahead:
-                    print(colored("Your branch is ahead of 'origin/{}' by {} commit."
-                                  .format(branch_name, commits_ahead), 'magenta'))
-                elif commits_behind:
-                    print(colored("Your branch is behind 'origin/{}' by {} commit, and can be fast-forwarded."
-                                  .format(branch_name, commits_behind), 'magenta'))
+                if not repo.active_branch.tracking_branch():
+                    print(colored("The current branch '{}' has no upstream branch."
+                                  .format(branch_name), 'magenta'))
+                else:
+                    commits_ahead, commits_behind = self._count_commits(repo, branch_name)
+                    if commits_ahead and commits_behind:
+                        print(colored("Your branch and 'origin/{}' have diverged,".format(branch_name), 'magenta'))
+                        print(colored("and have {} and {} different commits each, respectively."
+                                      .format(commits_ahead, commits_behind), 'magenta'))
+                    elif commits_ahead:
+                        print(colored("Your branch is ahead of 'origin/{}' by {} commit."
+                                      .format(branch_name, commits_ahead), 'magenta'))
+                    elif commits_behind:
+                        print(colored("Your branch is behind 'origin/{}' by {} commit, and can be fast-forwarded."
+                                      .format(branch_name, commits_behind), 'magenta'))
             clean = True
             indexed_files = repo.head.commit.diff()
             if len(indexed_files):
