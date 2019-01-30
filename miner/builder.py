@@ -686,21 +686,19 @@ class Builder:
             :return:
                 True when checkout was successful or False when branch or commit does not exist
             """
+            origin = repo.remotes.origin
             if remote.branch in repo.heads:
                 head = repo.heads[remote.branch]
                 head.checkout()
                 if remote.fetch:
-                    for repo_remote in repo.remotes:
-                        repo_remote.pull()
+                    origin.pull()
                 return True
-
-            for repo_remote in repo.remotes:
-                if remote.branch in repo_remote.refs:
-                    ref = repo_remote.refs[remote.branch]
-                    head = repo.create_head(remote.branch, ref)
-                    head.set_tracking_branch(ref)
-                    head.checkout()
-                    return True
+            if remote.branch in origin.refs:
+                ref = origin.refs[remote.branch]
+                head = repo.create_head(remote.branch, ref)
+                head.set_tracking_branch(ref)
+                head.checkout()
+                return True
             try:
                 # try to detach head to specific commit
                 commit = repo.commit(remote.branch)
