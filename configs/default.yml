@@ -99,8 +99,6 @@ remote:
       branch: ac6415e61f147a6892fd2785337aec93ddc68fa9
     luci:
       project: luci.git
-    miner-feeds:
-      project: braiins-os-feeds.git
     platform:
       match:
         zynq:
@@ -140,7 +138,8 @@ feeds:
     routing: '{build_dir}/lede-routing'
     telephony: '{build_dir}/lede-telephony'
     luci: '{build_dir}/luci'
-    miner: '{build_dir}/miner-feeds'
+    bos: '{working_dir}/package/system'
+    mining: '{working_dir}/package/mining'
 
 uenv:
   # boot Linux from SD instead of NAND

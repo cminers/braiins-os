@@ -377,6 +377,7 @@ class Builder:
                 platform = config.miner.platform
                 split_platform = builder._split_platform(platform)
                 self._format_tags = {
+                    'working_dir': repo_meta.working_dir,
                     'meta_repo': repo_url.rsplit('/', 1)[0],
                     'platform': platform,
                     'target': split_platform[0],
