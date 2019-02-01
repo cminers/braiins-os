@@ -20,17 +20,17 @@
 import argparse
 import tarfile
 import shutil
-import miner
+import builder as bos_builder
 import sys
 import os
 import io
 
-import miner.hash as hash
-import miner.nand as nand
+import builder.hash as hash
+import builder.nand as nand
 
 from upgrade.backup import ssh_mode as get_mode
 from upgrade.backup import MODE_SD, MODE_NAND
-from miner.ssh import SSHManager, SSHError
+from builder.ssh import SSHManager, SSHError
 from tempfile import TemporaryDirectory
 from urllib.request import Request, urlopen
 from glob import glob
@@ -133,10 +133,10 @@ def set_miner_cfg(ssh, config, rewrite_miner_cfg):
 
 
 def get_config(args, ssh, rewrite_miner_cfg):
-    config = miner.load_config(args.config)
+    config = bos_builder.load_config(args.config)
 
-    config.setdefault('miner', miner.EmptyDict())
-    config.setdefault('net', miner.EmptyDict())
+    config.setdefault('miner', bos_builder.EmptyDict())
+    config.setdefault('net', bos_builder.EmptyDict())
 
     if args.mac:
         config.net.mac = args.mac

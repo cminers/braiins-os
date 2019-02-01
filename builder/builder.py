@@ -29,7 +29,7 @@ import glob
 import filecmp
 import tempfile
 
-import miner.nand as nand
+import builder.nand as nand
 
 from itertools import chain
 from collections import OrderedDict, namedtuple
@@ -40,10 +40,10 @@ from datetime import datetime, timezone
 from doit.tools import run_once, config_changed, check_timestamp_unchanged
 from urllib.request import Request, urlopen
 
-from miner.config import ListWalker, RemoteWalker, load_config
-from miner.repo import RepoProgressPrinter
-from miner.ssh import SSHManager
-from miner.packages import Packages
+from builder.config import ListWalker, RemoteWalker, load_config
+from builder.repo import RepoProgressPrinter
+from builder.ssh import SSHManager
+from builder.packages import Packages
 
 
 class BuilderStop(Exception):
@@ -80,7 +80,7 @@ class Builder:
     WHATS_NEW = 'whatsnew.md'
     WHATS_NEW_COMMENT = "Create version header for '{}'".format(WHATS_NEW)
 
-    LEDE_META_DIR = 'miner'
+    LEDE_META_DIR = 'builder'
     LEDE_META_SSH = 'ssh.py'
     LEDE_META_HWID = 'hwid.py'
 

@@ -17,9 +17,9 @@
 
 import logging
 
-import miner.hwid as hwid
+import builder.hwid as hwid
 
-from miner.config import EmptyValue
+from builder.config import EmptyValue
 
 MINER_FIRMWARE = 'firmware'
 MINER_ENV_SIZE = 0x20000

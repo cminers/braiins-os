@@ -21,10 +21,10 @@ import sys
 import argparse
 import logging
 import colorlog
-import miner
+import builder as bos_builder
 import os
 
-import miner.dodo
+import builder.dodo as bos_dodo
 
 from doit.cmd_base import ModuleTaskLoader
 from doit.doit_cmd import DoitMain
@@ -42,7 +42,7 @@ class CommandManager:
     def set_args(self, argv, args):
         self._argv = argv
         self._args = args
-        self._config = miner.load_config(args.config)
+        self._config = bos_builder.load_config(args.config)
 
         # set optional keys to default value
         self._config.setdefault('build.jobs', 1)
@@ -56,7 +56,7 @@ class CommandManager:
 
         # overload settings with local configuration
         if os.path.isfile(self.LOCAL_CONFIGURATION):
-            config_local = miner.load_config(self.LOCAL_CONFIGURATION)
+            config_local = bos_builder.load_config(self.LOCAL_CONFIGURATION)
             self._config.merge(config_local)
 
         # change default platform in configuration
@@ -64,14 +64,14 @@ class CommandManager:
             self._config.miner.platform = args.platform
 
     def _doit_prepare(self, builder, task):
-        miner.dodo.builder = builder
+        bos_dodo.builder = builder
 
         # create build directory for storing doit database
         if not os.path.exists(builder.build_dir):
             os.makedirs(builder.build_dir)
 
         opt_vals = {'dep_file': os.path.join(builder.build_dir, '.doit.db')}
-        commander = DoitMain(ModuleTaskLoader(miner.dodo),
+        commander = DoitMain(ModuleTaskLoader(bos_dodo),
                              extra_config={'GLOBAL': opt_vals})
         commander.BIN_NAME = 'doit'
 
@@ -80,9 +80,9 @@ class CommandManager:
 
     def get_builder(self, task=None):
         """
-        Return miner builder for current configuration
+        Return bOS builder for current configuration
         """
-        builder = miner.Builder(self._config, self._argv)
+        builder = bos_builder.Builder(self._config, self._argv)
         if task:
             self._doit_prepare(builder, task)
         return builder
@@ -111,7 +111,7 @@ class CommandManager:
         logging.debug("Called command 'build'")
         if self._args.key:
             keys = self._args.key.split(':', 1)
-            key = self._config.setdefault('build.key', miner.ConfigDict())
+            key = self._config.setdefault('build.key', bos_builder.ConfigDict())
             key.secret = keys[0]
             key.public = keys[1] if len(keys) > 1 else '{}.pub'.format(keys[0])
         if self._args.jobs:
@@ -154,7 +154,7 @@ class CommandManager:
 
         # override default targets from command line
         if self._args.target:
-            self._config.deploy.targets = miner.ConfigList()
+            self._config.deploy.targets = bos_builder.ConfigList()
             targets = self._config.deploy.targets
             local = self._config.local
             for target in self._args.target:
@@ -163,7 +163,7 @@ class CommandManager:
                 if path:
                     if not target.startswith('local_'):
                         logging.error("Target '{}' cannot have path specification".format(target))
-                        raise miner.BuilderStop
+                        raise bos_builder.BuilderStop
                     target = target[6:]
                     if target in ['sd', 'sd_recovery']:
                         setattr(local, target + '_config', path)
@@ -193,7 +193,7 @@ class CommandManager:
             # always fetch all repositories before creating release
             self._config.remote.fetch_always = 'yes'
 
-        config_original = miner.load_config(self._args.config)
+        config_original = bos_builder.load_config(self._args.config)
         builder = self.get_builder('checkout')
         builder.release(config_original, push=not self._args.no_push)
 
@@ -264,9 +264,9 @@ def main(argv):
                                       help="deploy selected image to target device")
     subparser.set_defaults(func=command.deploy)
     subparser.add_argument('--mac', nargs='?',
-                           help='MAC address of miner (it is also used for remote host name determination)')
+                           help='MAC address of bOS device (it is also used for remote host name determination)')
     subparser.add_argument('--hostname', nargs='?',
-                           help='ip address or hostname of remote miner with ssh server')
+                           help='ip address or hostname of remote bOS device with ssh server')
     subparser.add_argument('--pool-url', nargs='?',
                            help='address of pool server in a format <host>[:<port>]')
     subparser.add_argument('--pool-user', nargs='?',
@@ -316,10 +316,10 @@ def main(argv):
     # add global arguments
     parser.add_argument('--log', choices=['error', 'warn', 'info', 'debug'], default='info',
                         help='logging level')
-    parser.add_argument('--config', default=miner.DEFAULT_CONFIG,
+    parser.add_argument('--config', default=bos_builder.DEFAULT_CONFIG,
                         help='path to configuration file')
     parser.add_argument('--platform', choices=['zynq-dm1-g9', 'zynq-dm1-g19', 'zynq-am1-s9'], nargs='?',
-                        help='change default miner platform')
+                        help='change default bOS platform')
 
     # parse command line arguments
     args = parser.parse_args(argv)
@@ -348,5 +348,5 @@ if __name__ == "__main__":
     # execute only if run as a script
     try:
         main(sys.argv[1:])
-    except miner.BuilderStop:
+    except bos_builder.BuilderStop:
         sys.exit(1)
