@@ -23,7 +23,8 @@ opkg.lock)
 	bos_firmware_path="${opkg_lists}/${BOS_FIRMWARE_NAME}"
 	if [ -f "$bos_firmware_path" \
 		 -a "(" ! -f "$BOS_UPGRADE_PATH" -o "$BOS_UPGRADE_PATH" -ot "$bos_firmware_path" ")" ]; then
-		opkg list-upgradable | awk '/firmware/ {print $3 " -> " $5}' > "$BOS_UPGRADE_PATH"
+		bos_upgradable=$(opkg list-upgradable | awk '/firmware/ {print $3 " -> " $5}')
+		[ -z "$bos_upgradable" ] || echo "$bos_upgradable" > "$BOS_UPGRADE_PATH"
 	fi
 	;;
 *)
