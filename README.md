@@ -166,10 +166,10 @@ The string attributes can use special syntax for parameter expansion which is ex
 name of parameter for expansion is enclosed in *{}* and can be used anytime in the string. The list of supported
 parameters is following:
 
-* *platform* - the name defined in a *miner.platform* attribute (it has form *\<target\>-\<subtarget\>*)
-* *target* - the name of target architecture (e.g. *zynq*) that is derived from *miner.platform* attribute
-* *subtarget* - the name of target device (e.g. *dm1-g19*) that is derived from *miner.platform* attribute
-* *subtarget_family* - the name of the family of the subtarget (e.g. *dm1*) that is derived from *miner.platform*
+* *platform* - the name defined in a *bos.platform* attribute (it has form *\<target\>-\<subtarget\>*)
+* *target* - the name of target architecture (e.g. *zynq*) that is derived from *bos.platform* attribute
+* *subtarget* - the name of target device (e.g. *dm1-g19*) that is derived from *bos.platform* attribute
+* *subtarget_family* - the name of the family of the subtarget (e.g. *dm1*) that is derived from *bos.platform*
 * *build_dir* - build directory e.g. *build/\<target\>*
 
 Curly bracket is also used by the YAML for dictionary in an abbreviated form and when string starts with the curly
@@ -185,8 +185,10 @@ sd: output/{platform}/sd/
 
 The default configuration file is fully commented so the following list of global categories is only short description:
 
-* *miner* - the settings concerning one instance of miner (platform, MAC, HWID, default pool); default configuration is
-  used only for testing and is usually overridden from command line during release process
+* *bos* - the settings concerning one instance of bOS device (platform, HWID, default firmware pattition); default
+  configuration is used only for testing and is usually overridden from command line during release process
+* *net* - the network configuration of a target bOS device (MAC, hostname, static IP)
+* *miner* - the settings concerning only miner specific attributes (default pool)
 * *build* - the configuration of build process (path to OpenWrt configuration, build directories, keys, ...)
 * *remote* - the list of all remote repositories with parameters for fetching; the parameters *fetch* and *branch* used
   as a default value for all repositories could be overridden in a specific repository by parameter of the same name
@@ -205,10 +207,12 @@ The structure of the local configuration is the same as default configuration fi
 address of the target are being overriden:
 
 ```yaml
-miner:
+bos:
   # possible platforms are zynq-dm1-g9, zynq-dm1-g19, zynq-am1-s9
   platform: zynq-am1-s9
-  # default miner MAC address
+
+net:
+  # default bOS device MAC address
   mac: 00:0A:35:FF:FF:00
 ```
 
@@ -348,7 +352,7 @@ the command line.
 ### System Upgrade vs. Deployment
 
 *Do not confuse deployment process with the system upgrade!* The deployment is used mainly for developers for testing
-the firmware on running miner or for initial factory NAND programming. For system upgrade use standard firmware tarball
+the firmware on running device or for initial factory NAND programming. For system upgrade use standard firmware tarball
 which can be loaded with help of web interface or with OpenWrt *sysupgrade* utility.
 Follow [user manual](docs/user-manual) for standard firmware upgrade procedure
 
@@ -387,25 +391,25 @@ address does not correspond with the hostname.
 
 *Be very cautious with MAC address!* If the *--mac* parameter is omitted, the default MAC address from configuration
 file is used (`00:0A:35:FF:FF:FF`) and remote machine is upgraded with it. Therefore, it is recommended to use hostname
-only in situations when miners MAC address needs to be changed.
+only in situations when devices MAC address needs to be changed.
 
 The hostname is determined from MAC address when not specified. The machine generates its name based on current MAC in a form of
 `{MACHINE_CLASS}-xxyyzz` where `MACHINE_CLASS` is e.g. `miner` and `xxyyzz` are last three numbers from its address.
 
 ```bash
-# upgrade remote miner with the hostname 'miner-ffff01'
+# upgrade remote device with the hostname 'miner-ffff01'
 $ ./bb.py deploy nand --mac 00:0A:35:FF:FF:01
-# upgrade remote miner on address '192.168.0.1' and change its MAC to '00:0A:35:FF:FF:FF'
+# upgrade remote device on address '192.168.0.1' and change its MAC to '00:0A:35:FF:FF:FF'
 $ ./bb.py deploy nand --hostname 192.168.0.1
-# upgrade previous miner and set its MAC to original value
+# upgrade previous device and set its MAC to original value
 $ ./bb.py deploy nand --mac 00:0A:35:FF:FF:01 --hostname miner-ffffff
 ```
 
-There are also special configuration sub-targets which modify only miner configuration and do not touch other parts of
+There are also special configuration sub-targets which modify only bOS configuration and do not touch other parts of
 the NAND or SD partition:
 
 * *sd_config* - modify only *uEnv.txt* file on SD card which is read by the U-Boot
-* *nand_config* - modify only NAND U-Boot environment and miner configuration partition
+* *nand_config* - modify only NAND U-Boot environment and bOS configuration partition
 
 ### Local Targets
 
@@ -434,9 +438,9 @@ is special notation for passing local file path to the specific local target:
 <local_target>[:<path>]
 ```
 
-Miner MAC address can also be specified with *--mac* parameter. However, it is only used for generating the *uEnv.txt*.
-This MAC address is used when booting the miner from an SD card. The *--hostname* parameter is ignored for local
-targets. There are several useful parameters for miner configuration which will be described in the next section.
+Device MAC address can also be specified with *--mac* parameter. However, it is only used for generating the *uEnv.txt*.
+This MAC address is used when booting the device from an SD card. The *--hostname* parameter is ignored for local
+targets. There are several useful parameters for bOS configuration which will be described in the next section.
 
 Below are a few typical examples of *deploy* command for local targets:
 
@@ -452,7 +456,7 @@ $ ./bb.py deploy local_sd:/mnt/mmc0 --mac 00:0A:35:FF:FF:01 --uenv sd_boot
 # create recovery SD card which boots from SD and performs NAND factory reset using images stored on this SD 
 $ ./bb.py deploy local_sd_recovery:/mnt/mmc0 --mac 00:0A:35:FF:FF:01 --uenv sd_boot factory_reset sd_images
 
-# create special SD card only with 'uEnv.txt' which performs factory reset when it is inserted in a miner
+# create special SD card only with 'uEnv.txt' which performs factory reset when it is inserted in a device
 $ ./bb.py deploy local_sd_config:/mnt/mmc0 --uenv factory_reset
 ```
 
@@ -464,8 +468,8 @@ standard U-Boot variables (e.g. ethaddr) and some additional ones are provided b
 variables can be done in the braiins build system YAML file in *uenv* section. These parameters can also be passed by
 command line argument *--uenv*. The following list shows all supported settings:
 
-* *mac* - set miner MAC address (generates *ethaddr* variable)
-* *factory_reset* - when SD has this variable enabled and is inserted into the miner, the miner performs factory reset
+* *mac* - set device MAC address (generates *ethaddr* variable)
+* *factory_reset* - when SD has this variable enabled and is inserted into the device, the device performs factory reset
 * *sd_images* - used for factory reset images from SD (*factory_reset* must also be enable)
 * *sd_boot* - boot kernel image from SD (the U-Boot is still booted from the NAND)
 
@@ -516,12 +520,12 @@ The *release* command has also *--include* argument which is used for specificat
 content. In a special situation that a new firmware needs to upgrade also a U-Boot or a FPGA
 bitstream. Occasionally, a bash script (*COMMAND*) can also be added. It is run before in pre-init phase of the
 standard system upgrade process. It can contain some control checks or fixes of previous firmware running on a
-miner. The source code of this script is stored in the OpenWrt repository but must be configured externally that it is
+device. The source code of this script is stored in the OpenWrt repository but must be configured externally that it is
 included to the output image. The following list contains all sysupgrade components supported by the firmware:
 
 * *command* - bash script executed during firmware system upgrade
-* *uboot* - the U-Boot image for upgrading previous one (it can brick the miner)
-* *fpga* - the FPGA bitstream (the miner has auto recovery process which can rescue a miner when the new bitstream does
+* *uboot* - the U-Boot image for upgrading previous one (it can brick the device)
+* *fpga* - the FPGA bitstream (the device has auto recovery process which can rescue a device when the new bitstream does
   not work)
 
 ```bash
@@ -579,7 +583,7 @@ prune some old firmwares from the server.
 
 All generated files are described in the following list:
 
-* **firmware_\<version\>.tar** - signed tarball with all images for miner system upgrade compatible with *sysupgrade*
+* **firmware_\<version\>.tar** - signed tarball with all images for device system upgrade compatible with *sysupgrade*
   utility or LuCI web interface (this file can be used directly without *OPKG* utility)
 * **firmware_\<version\>.ipk** - standard *OPKG* package with firmware metadata used for installing new firmware<br>
   (it downloads corresponding *firmware_\<version\>.tar* from feeds server and initiate system upgrade)

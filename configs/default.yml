@@ -1,10 +1,12 @@
-miner:
+bos:
   # possible platforms are zynq-dm1-g9, zynq-dm1-g19, zynq-am1-s9
   platform: zynq-dm1-g19
-  # miner HW identifier
+  # bOS device HW identifier
 #  hwid: Q50QDhdWuWq9yDr5
   # select NAND firmware which is used for boot
   firmware: 1
+
+miner:
   # default miner pool
   pool:
     host: stratum+tcp://stratum.slushpool.com
@@ -18,7 +20,7 @@ miner:
 #    fixed_freq: true
 
 net:
-  # default miner MAC address
+  # default bOS device MAC address
   mac: 00:0A:35:FF:FF:FF
   # static IP settings
 #  ip: 10.33.0.2
@@ -26,8 +28,8 @@ net:
 #  gateway: 10.33.0.1
 #  dns_servers:
 #  - 10.33.0.1
-  # miner hostname when DHCP is used (static IP is not set)
-#  hostname: bos-miner
+  # bOS device hostname when DHCP is used (static IP is not set)
+#  hostname: bos-device
 
 build:
   # name of subdirectory in the build directory
@@ -156,7 +158,7 @@ deploy:
   # some targets are aliases with predefined behaviour:
   # * nand:
   #  - selects targets 'nand_recovery' and 'nand_config'
-  #  - enables options 'write_miner_cfg', 'reset_uboot_env' and 'reboot'
+  #  - enables options 'write_bos_cfg', 'reset_uboot_env' and 'reboot'
   # * local_sd:
   #  - deploy SD images to local directory
   #  - selects target 'local_sd_config'
@@ -189,26 +191,26 @@ deploy:
   write_bitstream: no
   # remove UUID from SD card
   remove_extroot_uuid: no
-  # set U-Boot environment with miner configuration (MAC, HWID, firmware)
+  # set U-Boot environment with bOS configuration (MAC, HWID, firmware)
   # it is useful for changing HWID when SD card is inserted
   # SD card U-Boot cannot write to the NAND directly
-  set_miner_env: no
-  # overwrite NAND with new miner configuration (MAC, HWID)
+  set_bos_env: no
+  # overwrite NAND with new bOS configuration (MAC, HWID)
   # it is also necessary to reset uboot_env and overlay/extroot
-  write_miner_cfg: no
+  write_bos_cfg: no
   # erase U-Boot environment and set it to default one after reboot
   reset_uboot_env: no
   # erase NAND/UBI overlay (rootfs_data) and reinit it after reboot
-  # it is erased only overlay for current firmware (selected by miner.firmware)
+  # it is erased only overlay for current firmware (selected by bos.firmware)
   reset_overlay: no
   # erase SD card overlay and reinit it after reboot
   reset_extroot: no
-  # reboot miner after successful deploy
+  # reboot bOS device after successful deploy
   reboot: no
 
   # setting for deploy over SSH connection
   ssh:
-    # ip address or hostname of remote miner
+    # ip address or hostname of remote bOS device
     # when omitted then generated hostname 'miner-xxyyzz' is used
     # where xxyyzz are last three numbers from MAC address
 #    hostname: 192.168.1.1

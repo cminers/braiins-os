@@ -61,7 +61,7 @@ class CommandManager:
 
         # change default platform in configuration
         if args.platform:
-            self._config.miner.platform = args.platform
+            self._config.bos.platform = args.platform
 
     def _doit_prepare(self, builder, task):
         bos_dodo.builder = builder

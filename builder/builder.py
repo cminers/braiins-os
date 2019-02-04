@@ -69,7 +69,7 @@ def get_stream_size(stream):
 
 class Builder:
     """
-    Main class for building the Miner firmware based on the LEDE (OpenWRT) project.
+    Main class for building the bOS firmware based on the LEDE (OpenWRT) project.
 
     It prepares the LEDE source code and all related projects.
     Then it is possible to configure the project and build the firmware.
@@ -99,6 +99,7 @@ class Builder:
     UENV_TXT = 'uEnv.txt'
 
     MTD_BITSTREAM = 'fpga'
+    MTD_MINER_CFG = 'miner_cfg'
 
     UPGRADE_IMAGE_PREFIX = 'braiins-os'
 
@@ -195,7 +196,7 @@ class Builder:
         :return:
             Pair of two strings with platform target and sub-target.
         """
-        platform = platform or self._config.miner.platform
+        platform = platform or self._config.bos.platform
         return tuple(platform.split('-', 1))
 
     def _get_sysupgrade_attr(self, name):
@@ -212,7 +213,7 @@ class Builder:
 
         # find attributes for current platform with prefix pattern
         for pattern, value in sorted(sysupgrade.items(), reverse=True):
-            if self._config.miner.platform.startswith(pattern) and value.get(name):
+            if self._config.bos.platform.startswith(pattern) and value.get(name):
                 return value.get(name)
 
     def _write_target_config(self, stream, config):
@@ -226,7 +227,7 @@ class Builder:
         """
         image_packages = load_config(self._config.build.packages)
 
-        platform = self._config.miner.platform
+        platform = self._config.bos.platform
         target_name, _ = self._split_platform(platform)
         device_name = platform.replace('-', '_')
         bitstream_path = self._get_bitstream_path()
@@ -374,7 +375,7 @@ class Builder:
                 repo_meta = git.Repo()
                 repo_url = repo_meta.remotes.origin.url
 
-                platform = config.miner.platform
+                platform = config.bos.platform
                 split_platform = builder._split_platform(platform)
                 self._format_tags = {
                     'working_dir': repo_meta.working_dir,
@@ -575,10 +576,10 @@ class Builder:
 
     def _get_hostname(self) -> str:
         """
-        Return hostname derived from miner MAC address
+        Return hostname derived from bOS device MAC address
 
         :return:
-            Miner hostname for current configuration.
+            bOS hostname for current configuration.
         """
         mac = self._config.net.mac
         return 'miner-' + ''.join(mac.split(':')[-3:]).lower()
@@ -663,7 +664,7 @@ class Builder:
         :return:
             List of generators used for doit task.
         """
-        for remote in RemoteWalker(self._config.remote, self._config.miner.platform):
+        for remote in RemoteWalker(self._config.remote, self._config.bos.platform):
             yield self._clone_repo_doit(remote)
 
     def _checkout_repo(self, repo, remote):
@@ -762,7 +763,7 @@ class Builder:
         :return:
             List of generators used for doit task.
         """
-        for remote in RemoteWalker(self._config.remote, self._config.miner.platform):
+        for remote in RemoteWalker(self._config.remote, self._config.bos.platform):
             yield self._checkout_repo_doit(remote)
 
     def prepare_feeds_conf_doit(self):
@@ -1042,7 +1043,7 @@ class Builder:
 
     def build(self, targets=None):
         """
-        Build the Miner firmware for current configuration
+        Build the bOS firmware for current configuration
 
         It is possible alter build system by following attributes in configuration file:
 
@@ -1280,7 +1281,7 @@ class Builder:
         :param image:
             Paths to firmware images.
         """
-        platform = self._config.miner.platform
+        platform = self._config.bos.platform
 
         self._write_nand_uboot(ssh, image)
 
@@ -1312,9 +1313,10 @@ class Builder:
                 logging.info("Updating '{}' ({}) volumes with 'sysupgrade.tar'...".format(firmware, mtd))
                 # use sysupgrade image which preserves overlay data from UBIFS
                 ssh.run('ubiattach', '-p', mtd)
+                sysupgrade_dir = 'sysupgrade-{}'.format(self._split_platform(platform)[1])
                 volume_images = (
-                    ('kernel', 'sysupgrade-miner-nand/kernel', '/dev/ubi0_0'),
-                    ('rootfs', 'sysupgrade-miner-nand/root', '/dev/ubi0_1')
+                    ('kernel', '{}/kernel'.format(sysupgrade_dir), '/dev/ubi0_0'),
+                    ('rootfs', '{}/root'.format(sysupgrade_dir), '/dev/ubi0_1')
                 )
                 for volume_name, volume_image, device in volume_images:
                     logging.info("Updating volume '{}' ({}) with '{}'...".format(volume_name, device, volume_image))
@@ -1370,25 +1372,25 @@ class Builder:
         :param ssh:
             Connected SSH client.
         """
-        # write miner configuration to miner_cfg NAND
-        if self._config.deploy.write_miner_cfg == 'yes':
-            miner_cfg_input = io.BytesIO()
-            if not nand.write_miner_cfg_input(self._config, miner_cfg_input):
+        # write bOS configuration to NAND
+        if self._config.deploy.write_bos_cfg == 'yes':
+            bos_cfg_input = io.BytesIO()
+            if not nand.write_miner_cfg_input(self._config, bos_cfg_input):
                 raise BuilderStop
             # generate image file with NAND configuration
             mkenvimage = self._get_utility(self.LEDE_MKENVIMAGE)
             output = self._run(mkenvimage, '-r', '-p', str(0), '-s', str(nand.MINER_CFG_SIZE), '-',
-                               input=miner_cfg_input.getvalue(), output=True)
-            logging.info("Writing miner configuration to NAND partition 'miner_cfg'...")
-            with ssh.pipe('mtd', 'write', '-', 'miner_cfg') as remote:
+                               input=bos_cfg_input.getvalue(), output=True)
+            logging.info("Writing bOS configuration to NAND partition '{}'...".format(self.MTD_MINER_CFG))
+            with ssh.pipe('mtd', 'write', '-', self.MTD_MINER_CFG) as remote:
                 remote.stdin.write(output)
 
-        # change miner configuration in U-Boot env
-        if self._config.deploy.set_miner_env == 'yes' and self._config.deploy.reset_uboot_env == 'no':
-            logging.info("Writing miner configuration to U-Boot env in NAND...")
+        # change bOS configuration in U-Boot env
+        if self._config.deploy.set_bos_env == 'yes' and self._config.deploy.reset_uboot_env == 'no':
+            logging.info("Writing bOS configuration to U-Boot env in NAND...")
             ssh.run('fw_setenv', nand.NET_MAC, self._config.net.mac)
-            ssh.run('fw_setenv', nand.MINER_HWID, self._config.miner.hwid)
-            ssh.run('fw_setenv', nand.MINER_FIRMWARE, str(self._config.miner.firmware))
+            ssh.run('fw_setenv', nand.MINER_HWID, self._config.bos.hwid)
+            ssh.run('fw_setenv', nand.MINER_FIRMWARE, str(self._config.bos.firmware))
 
         reset_uboot_env = self._config.deploy.reset_uboot_env == 'yes'
         reset_overlay = self._config.deploy.reset_overlay == 'yes'
@@ -1396,7 +1398,7 @@ class Builder:
         ubi_attach = reset_overlay
 
         if ubi_attach:
-            firmware_mtd = self._get_firmware_mtd(self._config.miner.firmware)
+            firmware_mtd = self._get_firmware_mtd(self._config.bos.firmware)
             ssh.run('ubiattach', '-p', firmware_mtd)
 
         if reset_uboot_env:
@@ -1419,12 +1421,12 @@ class Builder:
 
         :param images:
             List of images for deployment.
-            It is also possible to provide empty list and alter only miner configuration:
+            It is also possible to provide empty list and alter only bOS configuration:
 
             - change MAC and HW ID in U-Boot env
             - erase NAND partitions to set it to the default state
             - remove extroot UUID
-            - overwrite miner configuration with new MAC or HW ID
+            - overwrite bOS configuration with new MAC or HW ID
         :param sd_config:
             Modify configuration files on SD card.
         :param nand_config:
@@ -1536,7 +1538,7 @@ class Builder:
         uboot_env_base_input = self._get_project_file(self.UPGRADE_DIR, self.UPGRADE_UBOOT_ENV_TXT)
         uboot_env_input = self._create_upgrade_miner_cfg_input()
 
-        # merge miner configuration with default U-Boot env
+        # merge bOS configuration with default U-Boot env
         with open(uboot_env_base_input, 'rb') as base_input_file:
             shutil.copyfileobj(base_input_file, uboot_env_input)
 
@@ -1659,7 +1661,7 @@ class Builder:
             'zynq-dm1-g9': 'G9',
             'zynq-dm1-g19': 'G19',
             'zynq-am1-s9': 'S9'
-        }.get(self._config.miner.platform)
+        }.get(self._config.bos.platform)
         info.write('FW_MINER_HWVER="{}"\n\n'.format(hwver).encode())
 
         with open(control_path, 'rb') as control_file:
@@ -1783,7 +1785,7 @@ class Builder:
 
         cache = None
         versions = next((value for pattern, value in sorted(self.UPGRADE_VERSION.items(), reverse=True)
-                         if self._config.miner.platform.startswith(pattern)), None)
+                         if self._config.bos.platform.startswith(pattern)), None)
 
         for version, (archive, archive_flags) in versions:
             # create subdirectory for specific version
@@ -1972,13 +1974,13 @@ class Builder:
 
     def deploy(self):
         """
-        Deploy Miner firmware to target platform
+        Deploy bOS firmware to target platform
         """
-        platform = self._config.miner.platform
+        platform = self._config.bos.platform
         platform_target, _ = self._split_platform(platform)
         targets = self._config.deploy.targets
 
-        logging.info("Start deploying Miner firmware...")
+        logging.info("Start deploying bOS firmware...")
 
         generic_dir = os.path.join(self._working_dir, 'bin', 'targets', 'zynq')
 
@@ -1999,7 +2001,7 @@ class Builder:
         aliased_targets = {
             'nand': {
                 'targets': {'nand_recovery', 'nand_config'},
-                'configs': (('write_miner_cfg', 'yes'), ('reset_uboot_env', 'yes'), ('reboot', 'yes'))
+                'configs': (('write_bos_cfg', 'yes'), ('reset_uboot_env', 'yes'), ('reboot', 'yes'))
             },
             'local_sd': {
                 'targets': {'local_sd', 'local_sd_config'},
