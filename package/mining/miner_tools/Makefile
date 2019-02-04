@@ -11,6 +11,7 @@ define Package/miner_tools
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=Utilities for managing miner
+  DEPENDS:=+bos_tools
 endef
 
 define Package/miner_tools/description

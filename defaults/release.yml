@@ -73,6 +73,7 @@ image_nand:
     - firmware_upgrade
   list:
     - bos_nand
+    - bos_tools
     - miner_tools
     - firmware
 
@@ -80,6 +81,7 @@ image_recovery:
   list:
     - bos_recovery
     - kmod-gpio-button-hotplug
+    - bos_tools
     - miner_tools
 
 image_upgrade:
