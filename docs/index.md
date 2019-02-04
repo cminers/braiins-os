@@ -345,7 +345,7 @@ python3 restore2factory.py backup/backup-id-date/ your-miner-hostname-or-ip
 
 ### Using factory firmware image
 
-On Antminer S9, you can alternatively flash a factory firmware image from manufacturer's website, with `FACTORY_IMAGE` being file path or URL to the `tar.gz` (not extracted!) file. Supported images with corresponding MD5 hashes are listed in the [platform.py](/upgrade/dm1/platform.py) file.
+On Antminer S9, you can alternatively flash a factory firmware image from manufacturer's website, with `FACTORY_IMAGE` being file path or URL to the `tar.gz` (not extracted!) file. Supported images with corresponding MD5 hashes are listed in the [platform.py](/upgrade/am1/platform.py) file.
 
 Run (*on Windows, use `python` command instead of `python3`*):
 
