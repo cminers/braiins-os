@@ -170,12 +170,8 @@ python3 upgrade2bos.py your-miner-hostname-or-ip
 
 ```bash
 cd braiins-os_am1-s9_ssh_VERSION
-
-# create environment
-# replace xxx with the decimal version of the installed Python
-virtualenv .venv3 -p /Library/Frameworks/Python.framework/Versions/3.xxx/bin/python3.xxx
-
-. venv3/bin/activate
+virtualenv venv
+source venv/bin/activate
 pip install -r requirements.txt
 
 python3 upgrade2bos.py your-miner-hostname-or-ip
@@ -333,12 +329,26 @@ AsicBoost is **turned on by default** and **can not be turned off**. The device 
 
 ## Migrating from Braiins OS to factory firmware
 
-Restoring the original factory firmware requires issuing the command below. Please, note that the previously created backup needs to be available.
+There are two methods how to restore the original/factory firmware.
 
-- Run (*on Windows, use `python` command instead of `python3`*):
+### Using previously created backup
+
+By default, backup of the original firmware is created during the migration to Braiins OS.
+
+Run (*on Windows, use `python` command instead of `python3`*):
 
 ```bash
 python3 restore2factory.py backup/backup-id-date/ your-miner-hostname-or-ip
+```
+
+### Using factory firmware image
+
+On Antminer S9, you can alternatively flash a factory firmware image from manufacturer's website, with `FACTORY_IMAGE` being file path or URL to the `tar.gz` (not extracted!) file. Supported images with corresponding MD5 hashes are listed in the [platform.py](/upgrade/dm1/platform.py) file.
+
+Run (*on Windows, use `python` command instead of `python3`*):
+
+```bash
+python3 restore2factory.py --factory-image FACTORY_IMAGE your-miner-hostname-or-ip
 ```
 
 ## Recovering Bricked (unbootable) Devices Using SD Card
@@ -360,8 +370,9 @@ Firmware upgrade process uses standard mechanism for installing/upgrading softwa
 
 ### Upgrade via web interface
 
-- Update the repository information by clicking on *Update lists* button in the System > Software menu. In case the button is missing, the system has to be rebooted!
-- Once done, proceed to update the ```firmware``` package.
+The firmware periodically checks for availability of a new version. In case a new version is available, blue button **Upgrade** appears on the right side of the top bar. Proceed to click on the button and confirm to start the upgrade.
+
+Alternatively, you can update the repository information manually by clicking on *Update lists* button in the System > Software menu. In case the button is missing, try to refresh the page. To trigger the upgrade process, type `firmware` into the *Download and install package* field and press *OK*.
 
 ### Upgrade via SSH
 
