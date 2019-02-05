@@ -33,6 +33,7 @@ from upgrade.backup import MODE_SD, MODE_NAND
 from builder.ssh import SSHManager, SSHError
 from tempfile import TemporaryDirectory
 from urllib.request import Request, urlopen
+from pathlib import Path
 from glob import glob
 
 USERNAME = 'root'
@@ -40,33 +41,15 @@ PASSWORD = None
 
 MINER_CFG_CONFIG = '/tmp/miner_cfg.config'
 
-PLATFORM_AM1_S9 = 'am1-s9'
-PLATFORM_DM1_G9 = 'dm1-g9'
-PLATFORM_DM1_G19 = 'dm1-g19'
+ZYNQ_PREFIX = 'zynq-'
 
-FW_2018_09_22_0 = '2018-09-22-0-'
-FW_2018_09_22_1 = '2018-09-22-1-'
-FW_2018_10_24_0 = '2018-10-24-0-'
-FW_2018_11_27_0 = '2018-11-27-0-c34516b0'
-FW_2019_01_24_0 = '2019-01-24-0-d3cc7c87'
-
-MINER_FIRMWARES = {
-    # AntMiner S9
-    '545c2c7697881f272c27ea1bb8662b36': (FW_2018_09_22_0 + '853643de', PLATFORM_AM1_S9),
-    'bb2c44b06980f021554f163e5c277122': (FW_2018_09_22_1 + '8d9b127d', PLATFORM_AM1_S9),
-    '7a8f0835641168f197a1f0ed691fb263': (FW_2018_10_24_0 + '9e5687a2', PLATFORM_AM1_S9),
-    'ddde6d48cb3b1221369f59c7b5bb9974': (FW_2018_11_27_0, PLATFORM_AM1_S9),
-    '08b1efdd561f3fa027b7b5c8ba7f5282': (FW_2019_01_24_0, PLATFORM_AM1_S9),
-    # DragonMint G9
-    '708a3b77f234337c72457617e5987afd': (FW_2018_09_22_0 + 'c169f7bc', PLATFORM_DM1_G9),
-    '97aaca5416b9b21db93f44801e8c2f61': (FW_2018_09_22_1 + '4ea78c06', PLATFORM_DM1_G9),
-    'a5635ceff3b992e30ddaa0749f76c9bb': (FW_2018_11_27_0, PLATFORM_DM1_G9),
-    '40bde94c1561608d1436f57a1653ad5c': (FW_2019_01_24_0, PLATFORM_DM1_G9),
-    # DragonMint G19
-    'da46965332226a69b6d685dd81379fbd': (FW_2018_09_22_0 + '2a866bfc', PLATFORM_DM1_G19),
-    'bc6d48dfaea1295518144a93803ba7b7': (FW_2018_09_22_1 + '9be06020', PLATFORM_DM1_G19),
-    '02513d7ad9b54d55d9254c959b2ec5ab': (FW_2018_11_27_0, PLATFORM_DM1_G19),
-    'bf81d3be55966d929d5a2c7682761312': (FW_2019_01_24_0, PLATFORM_DM1_G19)
+BOS_PLATFORMS = {
+    'zynq-am1-s9',
+    'zynq-dm1-g9',
+    'zynq-dm1-g19',
+    'am1-s9',
+    'dm1-g9',
+    'dm1-g19'
 }
 
 
@@ -146,14 +129,9 @@ def get_config(args, ssh, rewrite_miner_cfg):
     return config
 
 
-def firmware_deploy(args, firmware_dir, stage2_dir, md5_digest):
-    # detect firmware image
-    fw_info = MINER_FIRMWARES.get(md5_digest)
-    if not fw_info:
-        print("Unsupported firmware with MD5 digest: {}".format(md5_digest))
-        raise RestoreStop
-    fw_version, fw_platform = fw_info
-    print("Detected bOS firmware image: {} ({})".format(fw_version, fw_platform))
+def firmware_deploy(args, firmware_dir, stage2_dir, firmware_info):
+    _, fw_platform = firmware_info
+
     # get file paths
     boot_bin = os.path.join(firmware_dir, 'boot.bin')
     uboot_img = os.path.join(firmware_dir, 'u-boot.img')
@@ -224,6 +202,21 @@ def firmware_deploy(args, firmware_dir, stage2_dir, md5_digest):
             ssh.run('reboot')
 
 
+def parse_fw_info(firmware_signature):
+    exploded_signature = firmware_signature.split('_')
+    if len(exploded_signature) < 3:
+        return None
+    fw_version = exploded_signature[-1]
+    fw_platform = exploded_signature[1]
+    if len(fw_version) != 21 or len(fw_version.split('-')) != 5:
+        return None
+    if fw_platform not in BOS_PLATFORMS:
+        return None
+    if fw_platform.startswith(ZYNQ_PREFIX):
+        fw_platform = fw_platform[len(ZYNQ_PREFIX):]
+    return fw_version, fw_platform
+
+
 def main(args):
     url = args.firmware_url
     with TemporaryDirectory() as backup_dir:
@@ -237,14 +230,23 @@ def main(args):
         stream.close()
         md5_digest = stream.hash.hexdigest()
         # find factory_transition with firmware directory
-        firmware_dir = glob(os.path.join(backup_dir, '**', 'firmware'), recursive=True)[0]
+        firmware_dir = glob(os.path.join(backup_dir, '**', 'firmware'), recursive=True)
+        if firmware_dir:
+            firmware_dir = firmware_dir[0]
+            firmware_signature = Path(os.path.relpath(firmware_dir, backup_dir)).parts[0]
+            firmware_info = parse_fw_info(firmware_signature)
+            stage2_path = os.path.join(firmware_dir, 'stage2.tgz')
+        if not firmware_dir or not firmware_info or not os.path.isfile(stage2_path):
+            print('Unsupported firmware tarball!')
+            raise RestoreStop
         stage2_dir = os.path.join(firmware_dir, 'stage2')
         os.makedirs(stage2_dir)
         print('Extracting stage2 tarball...')
-        tar = tarfile.open(os.path.join(firmware_dir, 'stage2.tgz'))
+        tar = tarfile.open(stage2_path)
         tar.extractall(path=stage2_dir)
         tar.close()
-        firmware_deploy(args, firmware_dir, stage2_dir, md5_digest)
+        print("Detected bOS firmware image: {} ({})".format(*firmware_info))
+        firmware_deploy(args, firmware_dir, stage2_dir, firmware_info)
 
 
 if __name__ == "__main__":
