@@ -225,8 +225,10 @@ def firmware_deploy(args, firmware_dir, stage2_dir, md5_digest):
 
 
 def main(args):
+    url = args.firmware_url
     with TemporaryDirectory() as backup_dir:
-        stream = urlopen(Request(args.firmware_url, headers={'User-Agent': 'Mozilla/5.0'}))
+        stream = open(url, 'rb') if os.path.isfile(url) else \
+            urlopen(Request(args.firmware_url, headers={'User-Agent': 'Mozilla/5.0'}))
         stream = hash.HashStream(stream, 'md5')
         tar = tarfile.open(fileobj=stream, mode='r|*')
         print('Extracting firmware tarball...')
