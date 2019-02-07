@@ -33,9 +33,9 @@ if {$argc == 1} {
 }
 
 # check name of the board
-if { !(($board == "G9") || ($board == "G19")) } {
+if { !(($board == "G9") || ($board == "G19") || ($board == "G29")) } {
     puts "Unknown board: $board"
-    puts "Only supported boards are G9 and G19!"
+    puts "Only supported boards are G9, G19 and G29!"
     exit 1
 }
 

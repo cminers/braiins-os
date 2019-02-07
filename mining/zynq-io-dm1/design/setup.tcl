@@ -35,11 +35,11 @@ if {$argc == 1} {
 # check name of the board
 if {$board == "G9"} {
 	set vid_width 1
-} elseif {$board == "G19"} {
+} elseif {($board == "G19") || ($board == "G29")} {
 	set vid_width 6
 } else {
 	puts "Unknown board: $board"
-	puts "Only supported boards are G9 and G19!"
+	puts "Only supported boards are G9, G19 and G29!"
 	exit 1
 }
 

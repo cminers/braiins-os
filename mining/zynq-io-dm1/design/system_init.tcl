@@ -57,6 +57,12 @@ create_bd_design "system"
 puts "Source system.tcl ..."
 source "./system.tcl"
 
+# Patch for G29 control board - used single chip DDR memory, disabled USB0 interface
+if {$board == "G29"} {
+    set_property -dict [list CONFIG.PCW_UIPARAM_DDR_BUS_WIDTH {16 Bit}] [get_bd_cells processing_system7_0]
+    set_property -dict [list CONFIG.PCW_USB0_PERIPHERAL_ENABLE {0}] [get_bd_cells processing_system7_0]
+}
+
 make_wrapper -files [get_files $projdir/${design}.srcs/sources_1/bd/system/system.bd] -top
 
 ###########################################################

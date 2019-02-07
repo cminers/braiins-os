@@ -28,11 +28,11 @@
 print_help() {
 	echo ""
 	echo "Usage: ./run.sh BOARD"
-	echo "  BOARD - name of the board, available values: G9, G19"
+	echo "  BOARD - name of the board, available values: G9, G19, G29"
 }
 
 if [ "$1" == "--help" ]; then
-	echo "Synthesis script for G9/G19 boards"
+	echo "Synthesis script for G9, G19 and G29 boards"
 	print_help
 	exit 0
 fi
