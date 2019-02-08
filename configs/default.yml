@@ -1,6 +1,6 @@
 bos:
-  # possible platforms are zynq-dm1-g9, zynq-dm1-g19, zynq-am1-s9
-  platform: zynq-dm1-g19
+  # possible platforms are zynq-dm1-g9, zynq-dm1-g19, zynq-dm1-g29, zynq-am1-s9
+  platform: zynq-dm1-g29
   # bOS device HW identifier
 #  hwid: Q50QDhdWuWq9yDr5
   # select NAND firmware which is used for boot
@@ -62,6 +62,9 @@ build:
       require: 2018-09-22-0-c169f7bc
     zynq-dm1-g19:
       require: 2018-09-22-0-2a866bfc
+    zynq-dm1-g29:
+      major: yes
+      include: [command, spl, uboot, fpga]
     zynq-dm1:
       major: no
       include: [command]

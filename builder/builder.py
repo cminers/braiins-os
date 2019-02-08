@@ -1660,6 +1660,7 @@ class Builder:
         hwver = {
             'zynq-dm1-g9': 'G9',
             'zynq-dm1-g19': 'G19',
+            'zynq-dm1-g29': 'G29',
             'zynq-am1-s9': 'S9'
         }.get(self._config.bos.platform)
         info.write('FW_MINER_HWVER="{}"\n\n'.format(hwver).encode())

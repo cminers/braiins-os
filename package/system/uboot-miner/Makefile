@@ -48,6 +48,12 @@ define uboot/dm1-g19-sd
 endef
 UBOOTS += dm1-g19-sd
 
+define uboot/dm1-g29-sd
+	TITLE:=U-Boot $(PKG_VERSION) for DragonMint T1/G29 Miner Control Board (SD)
+	CONFIG:=dm1_g29_sd
+endef
+UBOOTS += dm1-g29-sd
+
 define uboot/am1-s9-sd
 	TITLE:=U-Boot $(PKG_VERSION) for AntMiner S9 Miner Control Board (SD)
 	CONFIG:=am1_s9_sd
@@ -65,6 +71,12 @@ define uboot/dm1-g19
 	CONFIG:=dm1_g19
 endef
 UBOOTS += dm1-g19
+
+define uboot/dm1-g29
+	TITLE:=U-Boot $(PKG_VERSION) for DragonMint T1/G29 Miner Control Board
+	CONFIG:=dm1_g29
+endef
+UBOOTS += dm1-g29
 
 define uboot/am1-s9
 	TITLE:=U-Boot $(PKG_VERSION) for AntMiner S9 Miner Control Board
