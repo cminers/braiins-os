@@ -331,9 +331,41 @@ AsicBoost is **turned on by default** and **can not be turned off**. The device 
 
 ## Migrating from Braiins OS to factory firmware
 
-There are two methods how to restore the original/factory firmware.
+You can restore the original/factory firmware using either your previously created backup or downloaded factory firmware image (only for Antminer S9!). In both cases, you have to download and unpack [transitional firmware image](#transitional-firmwares) and setup virtual environment first.
 
-### Using previously created backup
+### Setup virtual environment
+
+#### On Linux
+
+```bash
+cd braiins-os_am1-s9_ssh_VERSION
+virtualenv --python=/usr/bin/python3 .env
+source .env/bin/activate
+python3 -m pip install -r requirements.txt
+```
+
+#### On macOS
+
+```bash
+cd braiins-os_am1-s9_ssh_VERSION
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+#### On Windows
+
+```bash
+cd braiins-os_am1-s9_ssh_VERSION
+mkvirtualenv bos
+setprojectdir .
+workon bos
+pip install -r requirements.txt
+```
+
+### Flash the factory firmware
+
+#### Using previously created backup
 
 By default, backup of the original firmware is created during the migration to Braiins OS.
 
@@ -343,9 +375,9 @@ Run (*on Windows, use `python` command instead of `python3`*):
 python3 restore2factory.py backup/backup-id-date/ your-miner-hostname-or-ip
 ```
 
-### Using factory firmware image
+#### Using factory firmware image
 
-On Antminer S9, you can alternatively flash a factory firmware image from manufacturer's website, with `FACTORY_IMAGE` being file path or URL to the `tar.gz` (not extracted!) file. Supported images with corresponding MD5 hashes are listed in the [platform.py](/upgrade/am1/platform.py) file.
+On Antminer S9, you can alternatively flash a factory firmware image from manufacturer's website, with `FACTORY_IMAGE` being file path or URL to the `tar.gz` (not extracted!) file. Supported images with corresponding MD5 hashes are listed in the [platform.py](https://github.com/braiins/braiins-os/blob/master/upgrade/am1/platform.py) file.
 
 Run (*on Windows, use `python` command instead of `python3`*):
 

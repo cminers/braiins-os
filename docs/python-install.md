@@ -41,8 +41,7 @@ Then install the required packages by running the following commands in the Ubun
 
 ```bash
 sudo apt update
-sudo apt install python3 python3-pip
-sudo pip3 install virtualenv
+sudo apt install python3 python3-virtualenv
 ```
 
 While using Ubuntu on Windows, **follow the instructions for Linux**.
