@@ -1,3 +1,20 @@
+## All mining hardware types
+
+- [feature] **temperature limits** are now configurable via configuration file. The two new configuration options are: ```--fan-temp-hot``` and ```--fan-temp-dangerous```. These options effectively override the temp limits in ```temp-def.h```
+- [fix] **15m** and **24h hash rate** shows up only if the **full time period** of hash rate data has been collected
+- [fix] enabled/disabled **indicator** for **Asic Boost** now works again in the overview status page
+- [feature] **fan control** now has a new option ```--min-fans``` that specifies the minimum amount of fans that have to be operational (defaults to 1). Setting the option to "0" results in skipping the check for working fans.
+
+## Antminer S9
+
+- [feature] new configuration option allows **disabling temperature sensor scanning** (```--no-sensor-scan```). I2C scan log is now being stored into a separate file: ```/tmp/i2c_scan.log```
+- [feature] support for **ADT7461 temperature sensor** that appears to be used on some hash board revisions
+
+## Dragonmint T1
+
+- [feature] support for **G29 revision** of the control board (no SD-card slot)
+- [feature] web interface now allows configuring **full range of frequencies** (120 MHz - 1596 MHz) and **voltage levels** (1-31)
+
 # 2019-01-24-0
 
 ## All mining hardware types
