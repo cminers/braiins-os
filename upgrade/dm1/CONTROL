@@ -15,6 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+fw_miner_check() {
+	for fw_miner_hwver in "$@"; do
+		if [ "x${fw_miner_hwver}" == "x${FW_MINER_HWVER}" ]; then
+			echo yes
+			return
+		fi
+	done
+	echo no
+}
+
 flash_eraseall() {
 	flash_erase "$1" 0 0
 }
@@ -27,7 +37,7 @@ mtd_hash_expected=4206f3244e8b7bccb7b19903e0ef152d
 mtd_hash=$(cat /proc/mtd | md5sum | awk '{print $1}')
 
 ETHADDR=$(fw_printenv -n ethaddr)
-MINER_HWVER="G19"
+MINER_HWVER=$(cat /etc/hwrevision)
 IMAGE_FLAG=$(fw_printenv -n image_flag) # 0|1
 
 SPL_OFF=0x0
@@ -45,7 +55,13 @@ if [ "x${mtd_hash}" != "x${mtd_hash_expected}" ]; then
 	exit 1
 fi
 
-if [ "x${MINER_HWVER}" != "x${FW_MINER_HWVER}" ]; then
+case "$MINER_HWVER" in
+	"g19 t1.g19")
+		supported_fw=$(fw_miner_check G19 G29)
+		;;
+esac
+
+if [ x"$supported_fw" != x"yes" ]; then
 	echo "Unsupported miner version: ${MINER_HWVER}" >&2
 	exit 1
 fi

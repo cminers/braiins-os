@@ -55,7 +55,7 @@ def check_compatibility(ssh):
         with ssh.open('/tmp/sysinfo/board_name', 'r') as remote_file:
             board_name = next(remote_file).strip()
             print("This script cannot be used for remote target with board name '{}'!".format(board_name))
-            if board_name in ('dm1-g9', 'dm1-g19', 'am1-s9'):
+            if board_name in ('dm1-g9', 'dm1-g19', 'dm1-g29', 'am1-s9'):
                 print("Remote target is running braiins OS already and should be upgraded as follows:")
                 print("- from standard web interface")
                 print("- from command line with 'opkg' utility")
