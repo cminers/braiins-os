@@ -318,7 +318,7 @@ def main(argv):
                         help='logging level')
     parser.add_argument('--config', default=bos_builder.DEFAULT_CONFIG,
                         help='path to configuration file')
-    parser.add_argument('--platform', choices=['zynq-dm1-g9', 'zynq-dm1-g19', 'zynq-am1-s9'], nargs='?',
+    parser.add_argument('--platform', choices=['zynq-dm1-g9', 'zynq-dm1-g19', 'zynq-dm1-g29', 'zynq-am1-s9'], nargs='?',
                         help='change default bOS platform')
 
     # parse command line arguments
