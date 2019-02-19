@@ -1928,13 +1928,14 @@ class Builder:
         with open(dst_feeds_index, 'w') as dst_packages:
             if feeds_base:
                 dst_packages.write(feeds_base)
-                dst_packages.write('\n')
             for attribute, value in firmware_package.items():
                 if attribute not in self.FEEDS_EXCLUDED_ATTRIBUTES:
                     dst_packages.write('{}: {}\n'.format(attribute, value))
                 if fw_require and attribute == self.FEEDS_ATTR_VERSION:
                     # insert previous firmware requirements after version attribute
                     dst_packages.write('{}: {}\n'.format(self.FEEDS_ATTR_REQUIRE, fw_require))
+            # empty line at the end of file is required!
+            dst_packages.write('\n')
 
         # sign the created index file
         usign = self._get_utility(self.LEDE_USIGN)
