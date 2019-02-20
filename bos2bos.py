@@ -49,7 +49,8 @@ BOS_PLATFORMS = {
     'zynq-dm1-g19',
     'am1-s9',
     'dm1-g9',
-    'dm1-g19'
+    'dm1-g19',
+    'dm1-g29'
 }
 
 
