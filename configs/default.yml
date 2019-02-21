@@ -77,19 +77,18 @@ remote:
   # default configuration for fetching latest repository
   fetch: no
   # always fetch each repositories (it cannot be overridden)
-  fetch_always: no
+  fetch_always: yes
   # location aliases for remote repositories
   aliases:
     bos: '{meta_repo}'
     openwrt_feed: git://git.openwrt.org/feed
   # default location for remote repositories
   location: bos
-  # default branch for repositories
-  branch: '{meta_branch}'
   # list of remote repositories
   repos:
     lede:
       project: lede.git
+      branch: 8928dbdba3c6b7a62a9f992b1a6b56851b1a64d5
     lede-packages:
       location: openwrt_feed
       project: packages.git
@@ -104,20 +103,26 @@ remote:
       branch: ac6415e61f147a6892fd2785337aec93ddc68fa9
     luci:
       project: luci.git
+      branch: a4d003ed175216918ad2b65b2e84e6c632a3a036
     platform:
       match:
         zynq:
           project: zynq-io-bin.git
+          branch: b1842f3a6cadaf1c67b99f2e708afcf2db75a242
     u-boot:
       project: u-boot-xlnx.git
+      branch: a6e7b738d090e7c5de91395f492f1ae63bb2efda
     linux:
       project: linux-xlnx.git
+      branch: c871e53781700cd1d80b0627a870a9bffd7a9fcb
     cgminer:
       match:
         zynq-dm1:
           project: cgminer.git
+          branch: 0473b30ec4118e8ef4b45fb7f34a0d27a42f39d5
         zynq-am1:
           project: bmminer.git
+          branch: 3c50cab4ca74df20646e74c69cd0fcda14ee5798
     # it is possible to continue with any user repositories
 
 local:
