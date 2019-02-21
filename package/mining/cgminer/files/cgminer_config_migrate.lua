@@ -46,6 +46,7 @@ migrate_fns = {
 	['am1-s9'] = migrate_am1,
 	['dm1-g9'] = migrate_dm1,
 	['dm1-g19'] = migrate_dm1,
+	['dm1-g29'] = migrate_dm1,
 }
 
 function main(arg)

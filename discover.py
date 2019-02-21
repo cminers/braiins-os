@@ -200,6 +200,7 @@ class BosInfo(DeviceInfo):
         supported_names = [
             'dm1-g9',
             'dm1-g19',
+            'dm1-g29',
             'am1-s9'
         ]
         board_name = await asyncssh_run(conn, "cat /tmp/sysinfo/board_name")
@@ -297,7 +298,8 @@ class DmInfo(DeviceInfo):
     async def create(conn):
         supported_names = [
             'G9',
-            'G19'
+            'G19',
+            'G29'
         ]
         board_name = await asyncssh_run(conn, "cat /tmp/hwver")
         return await DmInfo(board_name).refresh(conn) if board_name in supported_names else None
