@@ -3,8 +3,8 @@ board type and revision.
 
 # Control board
 
-The notes here are relevant for Xilinx based control board are
-marked **G9** and **G19**.
+The notes here are relevant for Xilinx based control board are marked **G9** and **G19** and **G29**. Unfortunately, the **G29** doesn't have an SD card slot populated.
+
 
 ## Boot Modes
 

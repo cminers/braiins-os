@@ -14,6 +14,7 @@
 
 - [feature] support for **G29 revision** of the control board (no SD-card slot)
 - [feature] web interface now allows configuring **full range of frequencies** (120 MHz - 1596 MHz) and **voltage levels** (1-31)
+- [feature] transitional firmware for Dragonmints T1 with **G19** control board is no longer provided. See the documentation for details.
 
 # 2019-01-24-0
 
