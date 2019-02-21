@@ -1,3 +1,5 @@
+# 2019-02-21-0
+
 ## All mining hardware types
 
 - [feature] **temperature limits** are now configurable via configuration file. The two new configuration options are: ```--fan-temp-hot``` and ```--fan-temp-dangerous```. These options effectively override the temp limits in ```temp-def.h```
