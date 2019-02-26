@@ -63,8 +63,7 @@ build:
     zynq-dm1-g19:
       require: 2018-09-22-0-2a866bfc
     zynq-dm1-g29:
-      major: yes
-      include: [command, spl, uboot, fpga]
+      require: 2019-02-21-0-572dd48c
     zynq-dm1:
       major: no
       include: [command]
