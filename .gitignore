@@ -1,8 +1,8 @@
 /.env/
-/.idea/
+.idea/
 /build/
 /output/
 __pycache__/
-.local.yml
+/.local.yml
 .cache
-.pybuildenv
+/.pybuildenv/
