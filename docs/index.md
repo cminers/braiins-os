@@ -83,7 +83,7 @@ Download the latest released transitional firmware images + signatures from: [ht
 You can check the downloaded file for its authenticity and integrity. The image signature can be verified by [GPG](https://www.gnupg.org/documentation/):
 
 ```bash
-gpg2 --search-keys release@braiins.cz
+curl https://slushpool.com/media/download/braiins-os.gpg.pub | gpg2 --import
 for i in ./braiins-os_*asc; do gpg2 --verify $i; done
 ```
 
