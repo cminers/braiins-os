@@ -77,7 +77,7 @@ The steps described below need to be done only **the very first time** you are i
 
 ## Initial Steps
 
-Download the latest released transitional firmware images + signatures from: [https://feeds.braiins-os.org/](https://feeds.braiins-os.org/)
+Download the latest released transitional firmware images and GPG signatures from the feeds site at: [https://feeds.braiins-os.org/](https://feeds.braiins-os.org/)
 
 
 You can check the downloaded file for its authenticity and integrity. The image signature can be verified by [GPG](https://www.gnupg.org/documentation/):
