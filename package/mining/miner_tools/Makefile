@@ -1,4 +1,5 @@
 include $(TOPDIR)/rules.mk
+include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=miner_tools
 PKG_RELEASE:=1
@@ -22,9 +23,25 @@ endef
 define Build/Compile
 endef
 
+ifeq ($(SUBTARGET),am1-s9)
+define Package/miner_tools/subtarget_install
+	$(CP) ./files/CONFIG.am $(1)/usr/share/upgrade/CONFIG
+endef
+endif
+
+ifneq (,$(filter dm1-g9 dm1-g19 dm1-g29,$(SUBTARGET)))
+define Package/miner_tools/subtarget_install
+	$(CP) ./files/CONFIG.dm $(1)/usr/share/upgrade/CONFIG
+endef
+endif
+
 define Package/miner_tools/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) ./files/miner $(1)/usr/sbin/
+	$(INSTALL_DIR) $(1)/usr/share/upgrade
+	$(CP) ./files/CONTROL $(1)/usr/share/upgrade/CONTROL.bos
+	$(CP) ./files/miner_cfg.config $(1)/usr/share/upgrade/
+	$(call Package/miner_tools/subtarget_install,$(1))
 endef
 
 $(eval $(call BuildPackage,miner_tools))

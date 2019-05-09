@@ -1,0 +1,76 @@
+# Copyright (C) 2018  Braiins Systems s.r.o.
+#
+# This file is part of Braiins Build System (BB).
+#
+# BB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+mnt_dir="/mnt"
+
+ethaddr_conf="${mnt_dir}/config/mac"
+bmminer_conf="${mnt_dir}/config/bmminer.conf"
+network_conf="${mnt_dir}/config/network.conf"
+
+default_hostname="antMiner"
+
+get_bm_config() {
+	tr -d '\n' < "$bmminer_conf" | \
+	sed -n 's/.*"'$1'":[ "]*\([^ ",}]*\).*/\1/p'
+}
+
+get_net_config() {
+	sed -n '/'$1'=/s/.*=["]*\([^"]*\)["]*/\1/p' "$network_conf"
+}
+
+# find AntMiner rootfs MTD partition
+rootfs_mtd=$(cat /proc/mtd | sed -n '/antminer_rootfs/s/\(mtd[[:digit:]]\+\).*/\1/p')
+[ -n "$rootfs_mtd" ] || return 0
+
+# try to mount AntMiner rootfs from NAND
+rootfs_mtd="/dev/${rootfs_mtd}"
+
+set +e
+ubiattach -p "$rootfs_mtd" && rootfs_dettach=yes && \
+mount -t ubifs ubi0:rootfs "$mnt_dir" && rootfs_umount=yes
+set -e
+
+if [ x"$rootfs_umount" != x"yes" ]; then
+	[ x"$rootfs_dettach" == x"yes" ] && ubidetach -p "$rootfs_mtd"
+	return 0
+fi
+
+# save MAC address
+ETHADDR=$(cat "$ethaddr_conf")
+
+# save network settings
+NET_HOSTNAME=$(get_net_config "hostname")
+NET_IP=$(get_net_config "ipaddress")
+NET_MASK=$(get_net_config "netmask")
+NET_GATEWAY=$(get_net_config "gateway")
+NET_DNS_SERVERS=$(get_net_config "dnsservers" | tr " " ,)
+
+# save all local settings
+MINER_FREQ=$(get_bm_config "bitmain-freq")
+MINER_VOLTAGE=$(get_bm_config "bitmain-voltage")
+MINER_FIXED_FREQ=$(get_bm_config "fixed-freq")
+
+if [ x"$KEEP_HOSTNAME" == x"cond" ]; then
+	# keep hostname only if it has been changed by user
+	[ x"$NET_HOSTNAME" == x"$default_hostname" ] && KEEP_HOSTNAME="no" || KEEP_HOSTNAME="yes"
+fi
+
+umount "$mnt_dir"
+ubidetach -p "$rootfs_mtd"
+
+# set that the target configuration is successful
+CONFIG_RESULT="success"

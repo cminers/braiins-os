@@ -1,0 +1,99 @@
+# Copyright (C) 2018  Braiins Systems s.r.o.
+#
+# This file is part of Braiins Build System (BB).
+#
+# BB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+. /lib/zynq.sh
+. /lib/functions/bos-defaults.sh
+
+flash_eraseall() {
+	mtd erase "$1"
+}
+
+file_size() {
+	printf "0x%x" $(stat -c "%s" "$1")
+}
+
+get_miner_cfg() {
+	fw_printenv -c miner_cfg.config -n "$1" 2>/dev/null
+	return 0
+}
+
+SPL_OFF=0x0
+UBOOT_OFF=0x0
+UBOOT_ENV1_OFF=0x0
+UBOOT_ENV2_OFF=0x20000
+
+SRC_BITSTREAM_OFF=0x0
+DST_BITSTREAM_OFF=0x300000
+
+SPL_MTD=0
+UBOOT_MTD=1
+BITSTREAM_MTD=2
+UBOOT_ENV_MTD=4
+
+if [ $BOS_MODE == 'nand' ]; then
+	# determine current firmware when NAND is mounted
+	FIRMWARE_FLAG=$(fw_printenv -n firmware) # 1|2
+fi
+
+if [ x${FIRMWARE_FLAG} == x"1" ]; then
+	DST_KERNEL_OFF=0x7D00000
+	STAGES_MTD=8
+else
+	DST_KERNEL_OFF=0x1E00000
+	STAGES_MTD=7
+fi
+
+SRC_KERNEL_OFF=0x0
+SRC_STAGE2_OFF=0x0A00000
+DST_STAGE2_OFF=0x0A00000
+SRC_STAGE3_OFF=0x1E00000
+DST_STAGE3_OFF=0x1E00000
+SRC_STAGE2_MTD=$STAGES_MTD
+DST_STAGE2_MTD=$STAGES_MTD
+SRC_STAGE3_MTD=$STAGES_MTD
+DST_STAGE3_MTD=$STAGES_MTD
+
+echo "Restoring configuration from NAND..."
+
+# get target specific configuration
+. CONFIG
+
+# return when target specific configuration is successful
+[ x${CONFIG_RESULT} == x"success" ] && return 0
+
+# target specific configuration failed
+# try to recover configuration from 'miner_cfg' partition
+
+# get MAC from NAND or running system
+ETHADDR=$(get_miner_cfg "ethaddr")
+[ -n "$ETHADDR" ] || ETHADDR=$(cat /sys/class/net/eth0/address)
+
+NET_HOSTNAME=$(get_miner_cfg "net_hostname")
+NET_IP=$(get_miner_cfg "net_ip")
+NET_MASK=$(get_miner_cfg "net_mask")
+NET_GATEWAY=$(get_miner_cfg "net_gateway")
+NET_DNS_SERVERS=$(get_miner_cfg "net_dns_servers")
+
+MINER_FREQ=$(get_miner_cfg "miner_freq")
+MINER_VOLTAGE=$(get_miner_cfg "miner_voltage")
+MINER_FIXED_FREQ=$(get_miner_cfg "miner_fixed_freq")
+
+if [ -z "$NET_HOSTNAME" ]; then
+	KEEP_HOSTNAME="no"
+elif [ x"$KEEP_HOSTNAME" == x"cond" ]; then
+	KEEP_HOSTNAME="yes"
+fi

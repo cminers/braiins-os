@@ -1,16 +1,19 @@
 #!/bin/sh
 
+. /lib/functions/bos-defaults.sh
+
 # immediately exit when error occurs
 set -e
 
 usage() {
-	echo "usage: miner [-h] {factory_reset,run_recovery,fault_light} ..."
+	echo "usage: miner [-h] {factory_reset,run_recovery,fault_light,nand_install} ..."
 	echo
 	echo "positional arguments:"
-	echo "  {factory_reset,run_recovery,fault_light}"
+	echo "  {factory_reset,run_recovery,fault_light,nand_install}"
 	echo "    factory_reset       reboot and initiate factory reset"
 	echo "    run_recovery        reboot to recovery mode"
 	echo "    fault_light         turn on or off miner's fault LED"
+	echo "    nand_install        install/reinstall firmware to NAND"
 	echo
 	echo "optional arguments:"
 	echo "  -h, --help            show this help message and exit"
@@ -33,6 +36,64 @@ fault_light() {
 	echo $1 | nc localhost 4029 >/dev/null
 }
 
+nand_install() {
+	local firmware_tar="/usr/share/upgrade/firmware.tar.bz2"
+	local stage1_script="stage1.sh"
+
+	if [ $# -gt 0 ]; then
+		echo "command 'nand_install' does not take any argument"
+		exit 1
+	fi
+
+	if [ ! -f "$firmware_tar" ]; then
+		echo "firmware tarball '$firmware_tar' is missing"
+		exit 1
+	fi
+
+	# move to temporary directory
+	local tmp_dir=$(mktemp -d)
+	cd "$tmp_dir"
+
+	echo "Extracting upgrade files..."
+	bunzip2 -c "$firmware_tar" | tar xf -
+
+	# get name of extracted directory
+	local braiins_os=$(echo *)
+	# it is needed only content of firmware directory
+	mv "$braiins_os/firmware/"* .
+	rm -fr "$braiins_os"
+
+	# override CONTROL script tailored for bOS environment
+	cp /usr/share/upgrade/CONTROL.bos CONTROL
+
+	# copy auxiliary scripts
+	cp /usr/share/upgrade/CONFIG .
+	cp /usr/share/upgrade/miner_cfg.config .
+
+	# prepare attributes for stage1 script
+	local miner_hwid=$(cat /tmp/miner_hwid)
+
+	echo "Running stage1 upgrade script..."
+	set +e
+	if /bin/sh "$stage1_script" "$miner_hwid" yes cond no; then
+		echo "Upgrade stage1 has been successful!"
+	else
+		echo "Upgrade stage1 failed"
+	fi
+	set -e
+
+	# clean up temporary directory
+	cd /
+	rm -fr "$tmp_dir"
+
+	if [ $BOS_MODE == 'sd' ]; then
+		echo "Please turn off the miner and change jumper to boot it from NAND!"
+	else
+		echo "Rebooting to installed firmware..."
+		reboot
+	fi
+}
+
 # check number of arguments
 if [ $# -lt 1 ]; then
 	echo "missing command argument"
@@ -43,7 +104,7 @@ fi
 command="$1"
 
 case $command in
-	factory_reset|run_recovery|fault_light)
+	factory_reset|run_recovery|fault_light|nand_install)
 		shift
 		$command "$@"
 	;;

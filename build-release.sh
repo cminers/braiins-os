@@ -26,6 +26,11 @@ package_merge=$1
 shift
 release_subtargets=$@
 
+mtdparts="mtdparts=pl35x-nand:512k(boot),2560k(uboot),2m(fpga1),2m(fpga2),512k(uboot_env),512k(miner_cfg),22m(recovery),95m(firmware1),95m(firmware2)"
+recovery_mtdparts_am1_s9="${mtdparts},144m@0x2000000(antminer_rootfs)"
+recovery_mtdparts_dm1_g19="${mtdparts},512k@0x400000(dragonmint_env)"
+recovery_mtdparts_dm1_g29="$recovery_mtdparts_dm1_g19"
+
 #DRY_RUN=echo
 STAGE1=y
 CLONE=n
@@ -47,20 +52,38 @@ fi
 . prepare-env.sh
 
 function generate_sd_img() {
-    src_dir=$1
-    sd_img=$2
-    echo dd if=/dev/zero of=$sd_img bs=1M count=32
-    echo parted $sd_img --script mktable msdos
-    echo parted $sd_img --script mkpart primary fat32 2048s 16M
-    echo parted $sd_img --script mkpart primary ext4 16M 32M
+    subtarget=$1
+    echo 'src_dir="'$2'"'
+    echo 'sd_img="'$3'"'
+    echo 'fw_img="'$4'"'
 
-    echo sudo kpartx -s -av $sd_img
-    echo sudo mkfs.vfat /dev/mapper/loop0p1
-    echo sudo mkfs.ext4 /dev/mapper/loop0p2
-    echo sudo mount /dev/mapper/loop0p1 /mnt
-    echo sudo cp $src_dir/'sd/*' /mnt/
-    echo sudo umount /mnt
-    echo sudo kpartx -d $sd_img
+    echo 'sd_img_tmp=$(mktemp)'
+    echo 'dd if=/dev/zero of=${sd_img_tmp} bs=1M count=46'
+
+    echo 'sudo parted ${sd_img_tmp} --script mktable msdos'
+    echo 'sudo parted ${sd_img_tmp} --script mkpart primary fat32 2048s 16M'
+    echo 'sudo parted ${sd_img_tmp} --script mkpart primary ext4 16M 46M'
+
+    echo 'loop=$(sudo kpartx -s -av ${sd_img_tmp} | sed '"'"'/^add map /s/.*\(loop[[:digit:]]\).*\+/\1/;q'"'"')'
+
+    echo 'sudo mkfs.vfat /dev/mapper/${loop}p1'
+    echo 'sudo mkfs.ext4 /dev/mapper/${loop}p2'
+
+    echo 'sudo mount /dev/mapper/${loop}p1 /mnt'
+    echo 'sudo cp ${src_dir}/sd/* /mnt/'
+    recovery_mtdparts=$(eval echo \$recovery_mtdparts_${subtarget/-/_})
+    [ -n "$recovery_mtdparts" ] && echo 'echo "recovery_mtdparts='"$recovery_mtdparts"'" | sudo tee -a /mnt/uEnv.txt'
+    echo 'sudo umount /mnt'
+
+    echo 'sudo mount /dev/mapper/${loop}p2 /mnt'
+    echo 'sudo mkdir -p /mnt/work/work'
+    echo 'sudo chmod 0 /mnt/work/work'
+    echo 'sudo mkdir -p /mnt/upper/usr/share/upgrade'
+    echo 'sudo cp ${fw_img} /mnt/upper/usr/share/upgrade/firmware.tar.bz2'
+    echo 'sudo umount /mnt'
+
+    echo 'sudo kpartx -d ${sd_img_tmp}'
+    echo 'mv ${sd_img_tmp} ${sd_img}'
 }
 
 if [ "$date_and_patch_level" != "current" ]; then
@@ -113,11 +136,12 @@ for subtarget in $release_subtargets; do
      pack_and_sign_script=pack-and-sign-$package_name.sh
      publish_dir=./publish/$package_name
      sd_img=$publish_dir/${fw_prefix}_${subtarget}_sd_${version}.img
+     fw_img=$package_name/upgrade/${fw_prefix}_${subtarget}_ssh_${version}.tar.bz2
      gpg_opts="--armor --detach-sign --sign-with release@braiins.cz --sign"
      echo set -e > $pack_and_sign_script
      echo mkdir -p $publish_dir >> $pack_and_sign_script
      echo cp -r $package_name/feeds/ $publish_dir >> $pack_and_sign_script
-     generate_sd_img $package_name $sd_img >> $pack_and_sign_script
+     generate_sd_img $subtarget $package_name $sd_img $fw_img >> $pack_and_sign_script
      echo gpg2 $gpg_opts $sd_img >> $pack_and_sign_script
      echo for upgrade_img in $package_name/upgrade/\*\; do >> $pack_and_sign_script
      echo cp \$upgrade_img $publish_dir >> $pack_and_sign_script
