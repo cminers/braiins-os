@@ -1,3 +1,23 @@
+## All mining hardware types
+
+- [feature] YES, we have a **new logo** that is consistent with the new Braiins logo, hope, you like it ;-)
+- [feature] the **IP report button** feature now broadcasts a UDP datagram compatible with the original S9 factory firmware
+- [feature] the miner now stores the reason of the **last cgminer exit/failure** in ```/tmp/cgminer_quit_reason```. The miner status page now presents the actual reason along with a confirmation button to clear the last failure status
+- [feature] fix **web status** data loading when connecting to miners in remote locations with considerable latencies
+- [feature] **universal SD card images** - each SD card image tries to detect device MAC address from any firmware image that is present in NAND flash. This simplifies using the same SD card image on multiple devices without the need for manually generating editing ```uEnv.txt``` on each card
+- [feature] it is now possible to install bOS into flash memory from a running **SD card** - see the docs for details
+- [feature] increase stratum connect() timeout to 3 seconds to prevent harassing stratum servers to early when probing all IP address for a given URL
+- [feature] attempt to perform ```opkg install firmware``` on bOS instance **running from SD card** now visibly tells the user that this is not a supported operation (= you should obtain a new SD card image and write it to your SD card)
+- [bug] ```#xnsub``` support for NH stratum extension has been fixed
+- [bug] a few **memory leaks** in bmminer and cgminer API have been fixed
+
+## Antminer S9
+
+- [feature] there are 2 new options:
+   ```--disable-sensors``` - the mining software acts as if there were no temperature sensors found. That is fan would be running at 100% unless set to some manually override value
+   ```--disable-remote-sensors``` - mining software only takes temperature measurement from the hash boards and doesn't try to measure temperature on the mining chips. The actual mining chip temperature is being estimated as hash board temperature plus some empirically set offset (15 C)
+- [bug] fix support for non-asicboost pools by eliminating **mining.configure** in case the number of configured midstates is 1 (AsicBoost disabled)
+
 # 2019-02-21-0
 
 ## All mining hardware types
