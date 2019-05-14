@@ -79,7 +79,7 @@ function generate_sd_img() {
     echo 'sudo mkdir -p /mnt/work/work'
     echo 'sudo chmod 0 /mnt/work/work'
     echo 'sudo mkdir -p /mnt/upper/usr/share/upgrade'
-    echo 'sudo cp ${fw_img} /mnt/upper/usr/share/upgrade/firmware.tar.bz2'
+    echo 'sudo cp ${fw_img} /mnt/upper/usr/share/upgrade/firmware.tar.gz'
     echo 'sudo umount /mnt'
 
     echo 'sudo kpartx -d ${sd_img_tmp}'
@@ -136,7 +136,7 @@ for subtarget in $release_subtargets; do
      pack_and_sign_script=pack-and-sign-$package_name.sh
      publish_dir=./publish/$package_name
      sd_img=$publish_dir/${fw_prefix}_${subtarget}_sd_${version}.img
-     fw_img=$package_name/upgrade/${fw_prefix}_${subtarget}_ssh_${version}.tar.bz2
+     fw_img=$package_name/upgrade/${fw_prefix}_${subtarget}_ssh_${version}.tar.gz
      gpg_opts="--armor --detach-sign --sign-with release@braiins.cz --sign"
      echo set -e > $pack_and_sign_script
      echo mkdir -p $publish_dir >> $pack_and_sign_script

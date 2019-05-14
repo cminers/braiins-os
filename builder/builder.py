@@ -116,11 +116,11 @@ class Builder:
     UPGRADE_AM1_WEB = (UPGRADE_AM1, 'web')
     UPGRADE_VERSION = {
         'zynq-dm1': (
-            (UPGRADE_DM1_SSH, (ARCHIVE_TBZ2, [])),
-            (UPGRADE_DM1_TELNET, (ARCHIVE_TBZ2, []))
+            (UPGRADE_DM1_SSH, (ARCHIVE_TGZ, [])),
+            (UPGRADE_DM1_TELNET, (ARCHIVE_TGZ, []))
         ),
         'zynq-am1': (
-            (UPGRADE_AM1_SSH, (ARCHIVE_TBZ2, [])),
+            (UPGRADE_AM1_SSH, (ARCHIVE_TGZ, [])),
             (UPGRADE_AM1_WEB, (ARCHIVE_TGZ, [ARCHIVE_FLAG_FLAT]))
         )
     }

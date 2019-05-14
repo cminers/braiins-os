@@ -66,8 +66,8 @@ The table below outlines correspondence between transitional firmware image arch
 
 | Firmware prefix | Hardware |
 | --- | --- |
-| braiins-os_am1-s9_*.tar.bz2 | Antminer S9, S9i, S9j; (**R4** support is **broken** do not **USE**!!) |
-| braiins-os_dm1-g29_*.tar.bz2 | Dragon Mint T1 with **G19** or **G29** control board *|
+| braiins-os_am1-s9_*.tar.gz | Antminer S9, S9i, S9j; (**R4** support is **broken** do not **USE**!!) |
+| braiins-os_dm1-g29_*.tar.gz | Dragon Mint T1 with **G19** or **G29** control board *|
 
 *NOTE: transitional firmware for Dragonmints T1 with **G19** control board is no longer provided as it is fully compatible with **G29** transitional firmware.
 
@@ -90,7 +90,7 @@ for i in ./braiins-os_*asc; do gpg2 --verify $i; done
 You should see something like:
 
 ```
-gpg: assuming signed data in './braiins-os_am1-s9_2018-10-24-0-9e5687a2.tar.bz2'
+gpg: assuming signed data in './braiins-os_am1-s9_2018-10-24-0-9e5687a2.tar.gz'
 .
 .
 gpg: Good signature from "Braiins Systems Release Key (Key used for signing software made by Braiins Systems) <release@braiins.cz>" [ultimate]
@@ -99,7 +99,7 @@ gpg: Good signature from "Braiins Systems Release Key (Key used for signing soft
 Unpack the selected (or all) transitional firmware images using standard file archiver software (e.g. 7-Zip, WinRAR) or the following command (Linux):
 
 ```bash
-for i in  ./braiins-os_*.tar.bz2; do tar xvjf $i; done
+for i in  ./braiins-os_*.tar.gz; do tar xvjf $i; done
 ```
 
 ### Transitional firmware image types
@@ -109,8 +109,8 @@ The table below explains the use of individual transitional firmware images
 | Firmware prefix | Hardware |
 | --- | --- |
 | braiins-os_HARDWARE_TYPE_**sd**_VERSION.img | SD card image for testing on hardware, recovering a *bricked* machine etc. |
-| braiins-os_HARDWARE_TYPE_**ssh**_VERSION.tar.bz2 | transitional firmware for upgrading from factory firmware that has **ssh** access |
-| braiins-os_HARDWARE_TYPE_**telnet**_VERSION.tar.bz2 | transitional firmware for upgrading from factory firmware that provides **telnet** access |
+| braiins-os_HARDWARE_TYPE_**ssh**_VERSION.tar.gz | transitional firmware for upgrading from factory firmware that has **ssh** access |
+| braiins-os_HARDWARE_TYPE_**telnet**_VERSION.tar.gz | transitional firmware for upgrading from factory firmware that provides **telnet** access |
 | braiins-os_HARDWARE_TYPE_**web**_VERSION.{vendor specific extension} | transitional firmware for upgrading from factory firmware via the **factory firmware web interface**. The exact file extension depends on particular hardware type |
 
 

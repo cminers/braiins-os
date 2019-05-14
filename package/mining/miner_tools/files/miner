@@ -37,7 +37,7 @@ fault_light() {
 }
 
 nand_install() {
-	local firmware_tar="/usr/share/upgrade/firmware.tar.bz2"
+	local firmware_tar="/usr/share/upgrade/firmware.tar.gz"
 	local stage1_script="stage1.sh"
 
 	if [ $# -gt 0 ]; then
@@ -55,7 +55,7 @@ nand_install() {
 	cd "$tmp_dir"
 
 	echo "Extracting upgrade files..."
-	bunzip2 -c "$firmware_tar" | tar xf -
+	tar xzf "$firmware_tar"
 
 	# get name of extracted directory
 	local braiins_os=$(echo *)
