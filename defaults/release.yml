@@ -43,6 +43,12 @@ core:
     - uhttpd-mod-ubus
     - zlib
 
+core_tools:
+  list:
+    - socat
+    - bos_tools
+    - miner_tools
+
 block_mount:
   list:
     - block-mount
@@ -62,27 +68,26 @@ firmware_upgrade:
 image_sd:
   base:
     - core
+    - core_tools
     - block_mount
   list:
     - bos_sd
-    - miner_tools
 
 image_nand:
   base:
     - core
+    - core_tools
     - firmware_upgrade
   list:
     - bos_nand
-    - bos_tools
-    - miner_tools
     - firmware
 
 image_recovery:
+  base:
+    - core_tools
   list:
     - bos_recovery
     - kmod-gpio-button-hotplug
-    - bos_tools
-    - miner_tools
 
 image_upgrade:
   list:

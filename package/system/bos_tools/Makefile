@@ -11,6 +11,7 @@ define Package/bos_tools
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=Utilities for managing braiins OS
+  DEPENDS:=+socat
 endef
 
 define Package/bos_tools/description
@@ -21,7 +22,13 @@ endef
 define Build/Compile
 endef
 
+define Package/bos_tools/conffiles
+/etc/config/bos
+endef
+
 define Package/bos_tools/install
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_CONF) ./files/bos.config $(1)/etc/config/bos
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) ./files/bos $(1)/usr/sbin/
 endef
