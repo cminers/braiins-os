@@ -27,8 +27,11 @@ import sys
 
 from asyncssh import create_connection
 from asyncssh.misc import async_context_manager
+from socket import socket, AF_INET, SOCK_DGRAM
 
 ALL_HOSTS = '*'
+IP_REPORT_PORT = 14235
+IP_REPORT_BUFF = 1024
 
 
 class NetworkInfo:
@@ -405,26 +408,72 @@ def get_passwords(passwords_path):
     return passwords
 
 
-def main(args):
-    hostnames = get_hostnames(args.hostname)
-    args.passwords = get_passwords(args.passwords)
+class CommandManager:
+    def __init__(self):
+        self._argv = None
+        self._args = None
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(discover(args, hostnames))
-    loop.close()
+    def set_args(self, argv, args):
+        self._argv = argv
+        self._args = args
+
+    def scan(self):
+        hostnames = get_hostnames(self._args.hostname)
+        self._args.passwords = get_passwords(self._args.passwords)
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(discover(self._args, hostnames))
+        loop.close()
+
+    def listen(self):
+        s = socket(AF_INET, SOCK_DGRAM)
+        s.bind(('', IP_REPORT_PORT))
+        while True:
+            m = s.recvfrom(IP_REPORT_BUFF)
+            ip_addr, mac_addr = m[0].decode('utf-8').split(',')
+            print(self._args.format.format(IP=ip_addr, MAC=mac_addr))
+
+
+def main(argv):
+    command = CommandManager()
+
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+    subparsers.required = True
+    subparsers.dest = 'command'
+
+    # create the parser for the "scan" command
+    subparser = subparsers.add_parser('scan',
+                                      help="actively scan provided range of address")
+    subparser.set_defaults(func=command.scan)
+    subparser.add_argument('hostname', nargs='+',
+                           help='list of hostnames or subnet range')
+    subparser.add_argument('--passwords',
+                           help='path to file with list of possible passwords for connection')
+    subparser.add_argument('-j', '--jobs', type=int, default=50,
+                           help='number of concurrent jobs to scan network')
+
+    # create the parser for the "listen" command
+    subparser = subparsers.add_parser('listen',
+                                      help="listen for incoming broadcast from devices")
+    subparser.set_defaults(func=command.listen)
+    subparser.add_argument('--format', action="store",
+                           default="IP='{IP}', MAC='{MAC}'",
+                           help="change default formatting string for device information; "
+                                "the tags '{IP}' and '{MAC}' will be replaced with actual data")
+
+    # parse command line arguments
+    args = parser.parse_args(argv)
+    # set arguments
+    command.set_args(argv, args)
+    # call sub-command
+    args.func()
 
 
 if __name__ == "__main__":
     # execute only if run as a script
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('hostname', nargs='+',
-                        help='list of hostnames or subnet range')
-    parser.add_argument('--passwords',
-                        help='path to file with list of possible passwords for connection')
-    parser.add_argument('-j', '--jobs', type=int, default=50,
-                        help='number of concurrent jobs to scan network')
-
-    # parse command line arguments
-    args = parser.parse_args(sys.argv[1:])
-    main(args)
+    try:
+        main(sys.argv[1:])
+    except KeyboardInterrupt:
+        print()
+        pass
