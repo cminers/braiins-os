@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mnt_dir="/mnt"
+mnt_dir="/tmp/mnt/antminer_rootfs"
 
 ethaddr_conf="${mnt_dir}/config/mac"
 bmminer_conf="${mnt_dir}/config/bmminer.conf"
@@ -32,25 +32,26 @@ get_net_config() {
 	sed -n '/'$1'=/s/.*=["]*\([^"]*\)["]*/\1/p' "$network_conf"
 }
 
-# find AntMiner rootfs MTD partition
-rootfs_mtd=$(cat /proc/mtd | sed -n '/antminer_rootfs/s/\(mtd[[:digit:]]\+\).*/\1/p')
-[ -n "$rootfs_mtd" ] || return 0
+antminer_cleanup() {
+	# unmount AntMiner rootfs because it will be overwritten by upgrade
+	if [ x"$DRY_RUN" != x"yes" ]; then
+		umount "$mnt_dir"
+		rmdir "$mnt_dir"
+	fi
+}
 
-# try to mount AntMiner rootfs from NAND
-rootfs_mtd="/dev/${rootfs_mtd}"
-
-set +e
-ubiattach -p "$rootfs_mtd" && rootfs_dettach=yes && \
-mount -t ubifs ubi0:rootfs "$mnt_dir" && rootfs_umount=yes
-set -e
-
-if [ x"$rootfs_umount" != x"yes" ]; then
-	[ x"$rootfs_dettach" == x"yes" ] && ubidetach -p "$rootfs_mtd"
-	return 0
-fi
+# check if AntMiner rootfs is mounted
+# the mount is done during system pre-initialization phase
+[ -d "$mnt_dir" ] || return 0
 
 # save MAC address
 ETHADDR=$(cat "$ethaddr_conf")
+
+if [ -z "$ETHADDR" ]; then
+	# AntMiner rootfs is probably corrupted
+	antminer_cleanup
+	return 0
+fi
 
 # save network settings
 NET_HOSTNAME=$(get_net_config "hostname")
@@ -69,8 +70,7 @@ if [ x"$KEEP_HOSTNAME" == x"cond" ]; then
 	[ x"$NET_HOSTNAME" == x"$default_hostname" ] && KEEP_HOSTNAME="no" || KEEP_HOSTNAME="yes"
 fi
 
-umount "$mnt_dir"
-ubidetach -p "$rootfs_mtd"
+antminer_cleanup
 
 # set that the target configuration is successful
 CONFIG_RESULT="success"

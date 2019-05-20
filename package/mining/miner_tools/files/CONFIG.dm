@@ -15,28 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+env_config="/tmp/dragonmint_env.conf"
+
 get_env_cfg() {
 	fw_printenv -c "$env_config" -n "$1" 2>/dev/null
 	return 0
 }
 
-# find DragonMint env MTD partition
-env_mtd=$(cat /proc/mtd | sed -n '/dragonmint_env/s/\(mtd[[:digit:]]\+\).*/\1/p')
-[ -n "$env_mtd" ] || return 0
+dragonmint_cleanup() {
+	# remove DragonMint configuration file because NAND will be overwritten by upgrade
+	[ x"$DRY_RUN" != x"yes" ] && rm "$env_config"
+}
 
-env_config=$(mktemp)
-
-cat > "$env_config" <<END
-# MTD device name   Device offset   Env. size   Flash sector size
-/dev/$env_mtd       0x00000         0x20000     0x20000
-/dev/$env_mtd       0x00000         0x20000     0x20000
-END
+# check if DragonMint configuration file is created
+# the file is created during system pre-initialization phase
+[ -f "$env_config" ] || return 0
 
 # get MAC from DragonMint environment
 ETHADDR=$(get_env_cfg "ethaddr")
 
-rm "$env_config"
+dragonmint_cleanup
 
+# check if NAND is not corrupted
 [ -n "$ETHADDR" ] || return 0
 
 # set that the target configuration is successful

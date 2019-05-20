@@ -72,6 +72,7 @@ function generate_sd_img() {
     echo 'sudo mount /dev/mapper/${loop}p1 /mnt'
     echo 'sudo cp ${src_dir}/sd/* /mnt/'
     recovery_mtdparts=$(eval echo \$recovery_mtdparts_${subtarget/-/_})
+    echo '[ -f /mnt/uEnv.txt ] && sudo sed -i '"'"'/^ethaddr=/d'"'"' /mnt/uEnv.txt'
     [ -n "$recovery_mtdparts" ] && echo 'echo "recovery_mtdparts='"$recovery_mtdparts"'" | sudo tee -a /mnt/uEnv.txt'
     echo 'sudo umount /mnt'
 
