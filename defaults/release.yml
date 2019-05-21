@@ -72,6 +72,7 @@ image_sd:
     - block_mount
   list:
     - bos_sd
+    - firmware
 
 image_nand:
   base:

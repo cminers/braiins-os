@@ -42,6 +42,11 @@ define Package/firmware/preinst
 # if run within buildroot exit
 [ -n "$${IPKG_INSTROOT}" ] && exit 0
 
+. /lib/functions/bos-defaults.sh
+
+# do not write to NAND when package installation has been forced for incorrect mode
+[ $$BOS_MODE == 'nand' ] || exit 1
+
 PACKAGES_NAME="Packages"
 PACKAGES_PATH="/tmp/$${PACKAGES_NAME}"
 SYSUPGRADE_PATH="/tmp/sysupgrade.tar"
@@ -124,8 +129,31 @@ sleep 10
 exit 2
 endef
 
+define Package/firmware/prerm
+#!/bin/sh
+
+. /lib/functions/bos-defaults.sh
+
+# check if package is being removed in NAND mode
+if [ $$BOS_MODE != 'nand' ]; then
+	echo "Firmware cannot be installed/removed in '$$BOS_MODE' mode!"
+	echo "This functionality is available only for system running from NAND."
+	if [ $$BOS_MODE == 'sd' ]; then
+		echo
+		echo "Please read documentation about installation of current system to NAND from SD card."
+	fi
+	echo
+	exit 1
+fi
+endef
+
 define Package/firmware/postrm
 #!/bin/sh
+
+. /lib/functions/bos-defaults.sh
+
+# do not call factory reset when package removal has been forced for incorrect mode
+[ $$BOS_MODE == 'nand' ] || exit 1
 
 # if this script is run then simple package remove has been called
 echo "Processing factory reset..."
