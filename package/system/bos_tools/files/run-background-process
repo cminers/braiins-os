@@ -1,0 +1,251 @@
+#!/usr/bin/lua
+
+local nixio = require 'nixio'
+local fs = require 'nixio.fs'
+
+function eprintf(fmt, ...)
+	io.stderr:write(fmt:format(...))
+end
+
+function write0(file, buf)
+	local n = 0
+	while n < #buf do
+		local ret, errno, errmsg = file:write(buf, n)
+		if not ret then
+			return nil, errno, errmsg
+		end
+		if ret == 0 then
+			-- eof?
+			break
+		end
+		n = n + ret
+	end
+	return true
+end
+
+function fdprintf(file, fmt, ...)
+	local buf = fmt:format(...)
+	local ok, errno, errmsg = write0(file, buf)
+	if not ok then
+		eprint("failed to write to fd: %s\n", errmsg)
+		os.exit(0)
+	end
+end
+
+function usage(arg0)
+	eprintf("usage: %s [-d] <log_name> <command>\n", arg0)
+	eprintf("command is executed on background in a *deamonized* context\n")
+	eprintf("(that means: no stdin/out/err, and CWD=/)\n")
+	eprintf("  -d   disables forking to background\n")
+	os.exit(1)
+end
+
+function transcript_alive(log_path)
+	local f = io.open(log_path, 'r')
+	if not f then
+		eprintf("cannot open transcript for reading")
+		return false
+	end
+	local process_pid = nil
+	local process_done = false
+	for line in f:lines() do
+		local type, data = line:match('^(%w+) (.*)$')
+		if type then
+			if type == 'exit' then
+				process_done = true
+			elseif type == 'pid' then
+				process_pid = tonumber(data)
+			end
+		end
+	end
+	f:close()
+	-- there's a small race condition window when transcript is opened,
+	-- but pid is not yet written
+	if process_done or not process_pid then
+		return false
+	end
+	local proc = io.open(('/proc/%d/stat'):format(process_pid), 'r')
+	if not proc then
+		-- process is not running
+		return false
+	end
+	proc:close()
+	-- process still alive
+	return true
+end
+
+--- Daemonize the process.
+--- Taken from `lucid`
+-- @return boolean status or nil, error code, error message
+function daemonize()
+	if nixio.getppid() == 1 then
+		return
+	end
+
+	local pid, code, msg = nixio.fork()
+	if not pid then
+		return nil, code, msg
+	elseif pid > 0 then
+		os.exit(0)
+	end
+
+	nixio.setsid()
+	nixio.chdir("/")
+
+	local devnull = nixio.open("/dev/null", nixio.open_flags("rdwr"))
+	nixio.dup(devnull, nixio.stdin)
+	nixio.dup(devnull, nixio.stdout)
+	nixio.dup(devnull, nixio.stderr)
+
+	return true
+end
+
+function run_subshell(command)
+	local rp, wp = nixio.pipe()
+
+	local pid, code, msg = nixio.fork()
+	if not pid then
+		return nil, code, msg
+	elseif pid > 0 then
+		wp:close()
+		return true, pid, rp
+	end
+
+	local devnull, errno, errmsg = nixio.open("/dev/null", nixio.open_flags("rdwr"))
+	if not devnull then
+		eprintf("cannot open /dev/null: %s\n", errmsg)
+		os.exit(1)
+	end
+
+	nixio.dup(devnull, nixio.stdin)
+	nixio.dup(wp, nixio.stdout)
+	nixio.dup(wp, nixio.stderr)
+
+	local ok, errno, errmsg = nixio.exec('/bin/sh', '-c', command)
+	if not devnull then
+		eprintf("cannot execute subshell: %s\n", errmsg)
+		os.exit(1)
+	end
+	-- how did we get here?
+	assert(false)
+end
+
+function file_readline(state, file)
+	local pos = state:find('\n')
+	if pos then
+		return state:sub(1, pos - 1), state:sub(pos + 1)
+	end
+	local fds = { { fd = file, events = nixio.poll_flags("in") } }
+	while true do
+		local ret, errno, errmsg = nixio.poll(fds, -1)
+		if not ret then
+			if errno ~= nixio.const.EAGAIN then
+				return ret, errno, errmsg
+			end
+		elseif ret > 0 then
+			local ret, errno, errmsg = file:read(128)
+			if not ret then
+				return ret, errno, errmsg
+			end
+			if #ret == 0 then
+				return state, nil
+			end
+			state = state .. ret
+			if state:find('\n') then
+				return file_readline(state, file)
+			end
+		end
+	end
+end
+
+function fdquit(log_fd, fmt, ...)
+	eprintf(fmt, ...)
+	fdprintf(log_fd, "stdout "..fmt.."exit 1\n", ...)
+	os.exit(1)
+end
+
+function run_command(log_fd, command)
+	fdprintf(log_fd, "pid %d\n", nixio.getpid())
+	eprintf("executing command: %s\n", command)
+	fdprintf(log_fd, "stdout Executing command: %s\n", command)
+	local ok, pid, read_pipe = run_subshell(command)
+	if not ok then
+		fdquit(log_fd, "failed to fork")
+	end
+	local state = ''
+	while true do
+		local line, newstate, errmsg = file_readline(state, read_pipe)
+		if not newstate then
+			break
+		end
+		if not line then
+			fdfail(log_fd, "failed to read line: %s", errmsg)
+		end
+		state = newstate
+		fdprintf(log_fd, "stdout %s\n", line)
+		eprintf("stdout: %s\n", line)
+	end
+	local ret, status, code = nixio.waitpid(pid)
+	eprintf("waitpid: %s %s %s\n", tostring(ret), tostring(status), tostring(code))
+	if status == 'exited' then
+		fdprintf(log_fd, "exit %d\n", code)
+	else
+		fdprintf(log_fd, "exit %s %d\n", status, code)
+	end
+	log_fd:close()
+end
+
+
+function main(arg)
+	local setopts = {}
+	while arg[1] and arg[1]:sub(1, 1) == '-' do
+		setopts[arg[1]:sub(2)] = true
+		table.remove(arg, 1)
+	end
+	if #arg < 2 then
+		usage(arg[0])
+	end
+	local log_path = arg[1]
+	local command = arg[2]
+	local log_fd = nil
+
+	while true do
+		local fd, errno, errmsg = nixio.open(log_path, nixio.open_flags("wronly", "creat", "excl"), 0666)
+		if fd then
+			-- we have exclusive access
+			eprintf("got exclusive access to %s\n", log_path)
+			log_fd = fd
+			break
+		end
+		if errno ~= nixio.const.EEXIST then
+			eprintf("cannot open file %s: %s\n", log_path, errmsg)
+			os.exit(1)
+		end
+		-- we got EEXIST: log file already exists!
+		-- now we check if this is a stale log or if another process
+		-- with this lock/log file is already running.
+		if transcript_alive(log_path) then
+			-- another process is running
+			eprintf("already running\n")
+			os.exit(0)
+		end
+		eprintf("stale log file, removing\n")
+		-- remove stale transcript and try again
+		fs.unlink(log_path)
+		-- wait a bit to avoid spinning
+		nixio.nanosleep(0, 20e6)
+	end
+
+	if not setopts.d then
+		eprintf("daemonizing\n")
+		local ok, errno, errmsg = daemonize()
+		if not ok then
+			eprintf("failed to daemonize: %s\n", errmsg)
+			os.exit(1)
+		end
+	end
+
+	run_command(log_fd, command)
+end
+
+main(arg)
