@@ -6,6 +6,8 @@
       * [Initial Steps](#initial-steps)
       * [Phase 1: Creating Bootable SD Card Image (Antminer S9 example)](#phase-1-creating-bootable-sd-card-image-antminer-s9-example)
       * [Phase 2: Permanently Migrating from Factory Firmware to Braiins OS](#phase-2-permanently-migrating-from-factory-firmware-to-braiins-os)
+         * [Option A: Install from SD card](#option-a-install-from-sd-card)
+         * [Option B: Install using SSH](#option-b-install-using-ssh)
    * [Basic user's guide](#basic-users-guide)
       * [Miner Signalization (LED)](#miner-signalization-led)
          * [Recovery Mode](#recovery-mode)
@@ -20,6 +22,8 @@
       * [Recovering Bricked (unbootable) Devices Using SD Card](#recovering-bricked-unbootable-devices-using-sd-card)
       * [Firmware upgrade](#firmware-upgrade)
       * [Network miner discovery](#network-miner-discovery)
+         * [IP Report/Set button](#ip-reportset-button)
+         * [Discover scipt](#discover-scipt)
       * [Batch migration to Braiins OS](#batch-migration-to-braiins-os)
       * [Setting miner password via SSH](#setting-miner-password-via-ssh)
       * [Reset to initial Braiins OS version](#reset-to-initial-braiins-os-version)
@@ -135,9 +139,6 @@ sudo dd if=braiins-os_am1-s9_sd_VERSION.img of=/dev/your-sd-card-block-device
 sync
 ```
 
-### Adjusting MAC Address
-If you know the MAC address of your device, mount the SD card and adjust the MAC address. in ```uEnv.txt``` (most desktop Linux systems have automount capabilities once you reinsert the card into your reader). The ```uEnv.txt``` is environment for the bootloader and resides in the first (FAT) partition of the SD card. That way, once the device boots with Braiins OS, it would have the same IP address as it had with the factory firmware.
-
 ### Booting the Device from SD Card
 - Unmount the SD card
 - Adjust jumper to boot from SD card (instead of NAND memory):
@@ -146,17 +147,42 @@ If you know the MAC address of your device, mount the SD card and adjust the MAC
 - Insert it into the device, start the device.
 - After a moment, you should be able to access Braiins OS interface on device IP address.
 
+### MAC & IP address
+
+By default, MAC address of the device stays the same as it is inherited from firmware (stock or bOS) stored in the device (NAND). That way, once the device boots with Braiins OS, it would have the same IP address as it had with the factory firmware.
+
+Alternatively, you can specify MAC address of your choice by modifying `ethaddr=` parameter in the `uEnv.txt` file (resides in the first FAT partition of the SD card).
+
+### Using single SD card on multiple devices
+
+The last used MAC address is stored on SD card overlay partition to check if the SD is inserted to the same device. When the current MAC address differs from the previous one then network and system configuration are set to its default and `/etc/miner_hwid` is deleted.
+
+HW_ID is determined from NAND if it stores bOS FW. When NAND is corrupted or it contains stock firmware then `/etc/miner_hwid` is used if this file exists otherwise new HW_ID is generated and stored to `/etc/miner_hwid` to preserve HW_ID to next boot.
 
 ## Phase 2: Permanently Migrating from Factory Firmware to Braiins OS
 
-Once the SD card works, it is very safe to attempt flashing the built-in flash memory as there will always be a way to recover the factory firmware.
-Follow the steps below. The tool creates a backup of the original firmware in the ```backup``` folder. It is important to **keep the backup safe** to resolve any potential future issues.
+Once the SD card works, it is very safe to attempt flashing the built-in flash memory.
 
-*Note: You have to have Python 3 installed to migrate to Braiins OS and run all the `*.py` scripts. [Follow this guide to install Python 3.](python-install)*
+### Option A: Install from SD card
+
+In the System > Install Current System to Device (NAND) menu (or by `miner nand_install` command), you can trigger an operation that writtes Braiins OS permanently to miner NAND memory. Please note that backup of the original firmware is NOT created during the process.
+
+When NAND contains original or bOS firmware, then MAC address and other network information is preserved for newly installed firmware. The device settings installed to NAND cannot be overridden by changing network settings in system running from SD card.
+
+Once done, do not forgett to adjust jumper to boot from NAND memory (instead of SD card):
+   - [Antminer S9](s9)
+   - [Dragon Mint T1](dm1)
+
+### Option B: Install using SSH
+
+*Note: You have to have Python 3 installed to install Braiins OS using SSH and run all the `*.py` scripts. [Follow this guide to install Python 3.](python-install)*
+
+
+The tool creates a backup of the original firmware in the ```backup``` folder. It is important to **keep the backup safe** to resolve any potential future issues.
 
 Below are commands to replace original factory firmware with Braiins OS using the SSH variant. The tool attempts to login to the machine via SSH, therefore you may be prompted for a password.
 
-### Using Linux
+#### Using Linux
 
 ```bash
 cd braiins-os_am1-s9_ssh_VERSION
@@ -167,7 +193,7 @@ python3 -m pip install -r requirements.txt
 python3 upgrade2bos.py your-miner-hostname-or-ip
 ```
 
-### Using macOS
+#### Using macOS
 
 ```bash
 cd braiins-os_am1-s9_ssh_VERSION
@@ -178,7 +204,7 @@ pip install -r requirements.txt
 python3 upgrade2bos.py your-miner-hostname-or-ip
 ```
 
-### Using Windows
+#### Using Windows
 
 ```bash
 cd braiins-os_am1-s9_ssh_VERSION
@@ -196,7 +222,7 @@ python upgrade2bos.py your-miner-hostname-or-ip
 deactivate
 ```
 
-### Adding a post-upgrade script
+#### Adding a post-upgrade script
 
 There is an option `--post-upgrade` to run a custom post upgrade script.
 
@@ -498,12 +524,36 @@ net:
 
 ## Network miner discovery
 
-The script *discover.py* (available in the repository, [clone it first](#cloning-the-braiins-os-repository)) is to be used to discover supported mining devices in the local network. For each device, the output includes MAC address, IP address, system info, hostname, and a mining username configured.
+### IP Report/Set button
 
-The parameter is expected to include a list of IP addresses or IP subnetwork with a mask (example below) to scan a whole subnetwork.
+Pressing IP Report (S9) or IP Set (T1) button sends a message `${IP},${MAC}` using UDP broadcast to a port 14235. When the IP Report button is pressed correctly, the RED LED starts flashing for a while.
+
+The IP Report can be alternatively enforced by calling `bos ip_report` from the command line.
+
+The message and the protocol are compatible with the Bitmain IP Reporter. The default message and protocol can be changed in a UCI configuration file `/etc/config/bos` under 'ip_report' group.
+
+### Discover scipt
+
+The script *discover.py* (available in the repository, [clone it first](#cloning-the-braiins-os-repository)) is to be used to discover supported mining devices in the local network and has two working modes.
+
+#### Listen mode
+
+In this mode, IP and MAC address of the device are displayed after the IP Report button is pressed. Parameter `--format` can be used to change the default formatting of IP/MAC information
 
 ```bash
-python3 discover.py 10.55.0.0/24
+python3 discover.py listen --format "{IP} ({MAC})"
+
+10.33.10.191 (a0:b0:45:02:f5:35)
+```
+
+#### Scan mode
+
+In this mode, the script scans the specified network range for supported devices. The parameter is expected to include a list of IP addresses or IP subnetwork with a mask (example below) to scan a whole subnetwork.
+
+For each device, the output includes MAC address, IP address, system info, hostname, and a mining username configured.
+
+```bash
+python3 discover.py scan 10.55.0.0/24
 
 50:6c:be:08:52:e5 (10.55.0.117) | bOS dm1-g19_2018-11-27-0-c34516b0 [nand] {511524 KiB RAM} dhcp(miner-w1) @userName.worker1
 00:6c:aa:23:52:e1 (10.55.0.102) | DragonMint T1 G19 {250564 KiB RAM} dhcp(dragonMint) @userName.worker2
