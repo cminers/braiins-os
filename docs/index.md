@@ -165,11 +165,13 @@ Once the SD card works, it is very safe to attempt flashing the built-in flash m
 
 ### Option A: Install from SD card
 
-In the System > Install Current System to Device (NAND) menu (or by `miner nand_install` command), you can trigger an operation that writtes Braiins OS permanently to miner NAND memory. Please note that backup of the original firmware is NOT created during the process.
+In the System > Install Current System to Device (NAND) menu, you can trigger an operation that writes Braiins OS permanently to miner NAND memory. Please note that backup of the original firmware is NOT created during the process.
+
+Alternatively, you can login to the SD card running miner via SSH and run the following command: ```miner nand_install```
 
 When NAND contains original or bOS firmware, then MAC address and other network information is preserved for newly installed firmware. The device settings installed to NAND cannot be overridden by changing network settings in system running from SD card.
 
-Once done, do not forgett to adjust jumper to boot from NAND memory (instead of SD card):
+Once done, do not forget to adjust jumper to boot from NAND memory (instead of SD card):
    - [Antminer S9](s9)
    - [Dragon Mint T1](dm1)
 
@@ -528,11 +530,11 @@ net:
 
 Pressing IP Report (S9) or IP Set (T1) button sends a message `${IP},${MAC}` using UDP broadcast to a port 14235. When the IP Report button is pressed correctly, the RED LED starts flashing for a while.
 
-The IP Report can be alternatively enforced by calling `bos ip_report` from the command line.
+The IP Report can be alternatively enforced by calling ```bos ip_report``` from the command line.
 
 The message and the protocol are compatible with the Bitmain IP Reporter. The default message and protocol can be changed in a UCI configuration file `/etc/config/bos` under 'ip_report' group.
 
-### Discover scipt
+### Discover script
 
 The script *discover.py* (available in the repository, [clone it first](#cloning-the-braiins-os-repository)) is to be used to discover supported mining devices in the local network and has two working modes.
 
