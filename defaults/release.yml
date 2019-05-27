@@ -73,6 +73,7 @@ image_sd:
   list:
     - bos_sd
     - firmware
+    - luci-app-bos-nand-install
 
 image_nand:
   base:
