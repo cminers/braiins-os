@@ -37,8 +37,20 @@ fault_light() {
 		echo "command 'fault_light' takes only one argument [on|off]"
 		exit 1
 	fi
-	# send 'on' or 'off' to cgminer_monitor
-	echo $1 | nc localhost 4029 >/dev/null
+	if [ $BOS_MODE == 'recovery' ]; then
+		# cgminer_monitor is not running in the recovery mode
+		local red_led="/sys/class/leds/Red LED"
+		if [ "$1" = 'on' ]; then
+			echo "timer" > "$red_led/trigger"
+			echo "50" > "$red_led/delay_on"
+			echo "50" > "$red_led/delay_off"
+		else
+			echo "nand-disk" > "$red_led/trigger"
+		fi
+	else
+		# send 'on' or 'off' to cgminer_monitor
+		echo $1 | nc localhost 4029 >/dev/null
+	fi
 }
 
 nand_install() {
