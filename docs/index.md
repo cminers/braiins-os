@@ -297,6 +297,15 @@ S9 | 75&deg;C | 90&deg;C | 95&deg;C
 T1 | 89&deg;C | 95&deg;C | 105&deg;C
 
 
+The 'hot' and 'dangerous' temperature limits can be overriden in ```/etc/cgminer.conf``` e.g.:
+
+```
+fan-temp-hot: "91"
+fan-temp-dangerous: "96"
+```
+
+These options have no representation in the web interface as they are considered advanced.
+
 ### Fan Control configuration in `cgminer.conf`
 
 There are three new configuration statements: `fan-mode` which selects which mode to use, `fan-temp` which sets temperature (in degree Celsius, and is valid only when `fan-mode: "temp"`), and `fan-speed` which sets speed of fan (in percent).
