@@ -72,7 +72,7 @@ function generate_sd_img() {
     echo 'sudo mount /dev/mapper/${loop}p1 /mnt'
     echo 'sudo cp ${src_dir}/sd/* /mnt/'
     recovery_mtdparts=$(eval echo \$recovery_mtdparts_${subtarget/-/_})
-    echo '[ -f /mnt/uEnv.txt ] && sudo sed -i '"'"'/^ethaddr=/d'"'"' /mnt/uEnv.txt'
+    echo 'sudo [ -f /mnt/uEnv.txt ] && sudo sed -i '"'"'/^ethaddr=/d'"'"' /mnt/uEnv.txt'
     [ -n "$recovery_mtdparts" ] && echo 'echo "recovery_mtdparts='"$recovery_mtdparts"'" | sudo tee -a /mnt/uEnv.txt'
     echo 'sudo umount /mnt'
 
@@ -136,13 +136,13 @@ for subtarget in $release_subtargets; do
     # Generate script for publication
     ($DRY_RUN cd $output_dir;
      pack_and_sign_script=pack-and-sign-$package_name.sh
-     publish_dir=./publish/$package_name
+     publish_dir=./publish
      sd_img=$publish_dir/${fw_prefix}_${subtarget}_sd_${version}.img
      fw_img=$package_name/upgrade/${fw_prefix}_${subtarget}_ssh_${version}.tar.gz
      gpg_opts="--armor --detach-sign --sign-with release@braiins.cz --sign"
      echo set -e > $pack_and_sign_script
-     echo mkdir -p $publish_dir >> $pack_and_sign_script
-     echo cp -r $package_name/feeds/ $publish_dir >> $pack_and_sign_script
+     echo mkdir -p $publish_dir/$subtarget >> $pack_and_sign_script
+     echo cp -r $package_name/feeds/"*" $publish_dir/$subtarget >> $pack_and_sign_script
      generate_sd_img $subtarget $package_name $sd_img $fw_img >> $pack_and_sign_script
      echo gpg2 $gpg_opts $sd_img >> $pack_and_sign_script
      echo for upgrade_img in $package_name/upgrade/\*\; do >> $pack_and_sign_script
