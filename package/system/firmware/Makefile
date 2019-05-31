@@ -42,10 +42,14 @@ define Package/firmware/preinst
 # if run within buildroot exit
 [ -n "$${IPKG_INSTROOT}" ] && exit 0
 
-. /lib/functions/bos-defaults.sh
+# ensure compatibility with old firmwares which does not have bos_mode marker
+# moreover, old firmware has package installed only in NAND mode
+if [ -f "/lib/functions/bos-defaults.sh" ]; then
+	. /lib/functions/bos-defaults.sh
 
-# do not write to NAND when package installation has been forced for incorrect mode
-[ $$BOS_MODE == 'nand' ] || exit 1
+	# do not write to NAND when package installation has been forced for incorrect mode
+	[ $$BOS_MODE == 'nand' ] || exit 1
+fi
 
 PACKAGES_NAME="Packages"
 PACKAGES_PATH="/tmp/$${PACKAGES_NAME}"
