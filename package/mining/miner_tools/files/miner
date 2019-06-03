@@ -34,7 +34,7 @@ ip_report() {
 
 fault_light() {
 	if [ $# -ne 1 -o \( "$1" != 'on' -a "$1" != 'off' \) ]; then
-		echo "command 'fault_light' takes only one argument [on|off]"
+		echo "command 'fault_light' takes only one argument [on|off]" >&2
 		exit 1
 	fi
 	if [ $BOS_MODE == 'recovery' ]; then
@@ -58,12 +58,12 @@ nand_install() {
 	local stage1_script="stage1.sh"
 
 	if [ $# -gt 0 ]; then
-		echo "command 'nand_install' does not take any argument"
+		echo "command 'nand_install' does not take any argument" >&2
 		exit 1
 	fi
 
 	if [ ! -f "$firmware_tar" ]; then
-		echo "firmware tarball '$firmware_tar' is missing"
+		echo "firmware tarball '$firmware_tar' is missing" >&2
 		exit 1
 	fi
 
@@ -113,7 +113,7 @@ nand_install() {
 
 # check number of arguments
 if [ $# -lt 1 ]; then
-	echo "missing command argument"
+	echo "missing command argument" >&2
 	exit 1
 fi
 
@@ -129,7 +129,7 @@ case $command in
 		usage
 	;;
 	*)  # unknown command
-		echo "unknown command '$command'"
+		echo "unknown command '$command'" >&2
 		exit 1
 	;;
 esac

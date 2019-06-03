@@ -18,7 +18,7 @@ usage() {
 
 factory_reset() {
 	if [ $# -gt 0 ]; then
-		echo "command 'factory_reset' does not take any argument"
+		echo "command 'factory_reset' does not take any argument" >&2
 		exit 1
 	fi
 	# erase U-Boot environment
@@ -30,13 +30,13 @@ factory_reset() {
 run_recovery() {
 	set +e
 	if [ $# -gt 0 ]; then
-		echo "command 'run_recovery' does not take any argument"
+		echo "command 'run_recovery' does not take any argument" >&2
 		exit 1
 	fi
 	# check if uboot_env partition is not corrupted
 	if [ -n "$(fw_printenv 2>&1 >/dev/null)" ]; then
-		echo "U-Boot environment is corrupted and recovery mode cannot be run"
-		echo "Factory reset can fix this issue"
+		echo "U-Boot environment is corrupted and recovery mode cannot be run" >&2
+		echo "Factory reset can fix this issue" >&2
 		exit 1
 	fi
 	if [ $(uci get network.lan.proto) == 'static' ]; then
@@ -68,7 +68,7 @@ run_recovery() {
 
 ip_report() {
 	if [ $# -gt 0 ]; then
-		echo "command 'ip_report' does not take any argument"
+		echo "command 'ip_report' does not take any argument" >&2
 		exit 1
 	fi
 	# check if it is enabled in configuration
@@ -88,7 +88,7 @@ ip_report() {
 
 # check number of arguments
 if [ $# -lt 1 ]; then
-	echo "missing command argument"
+	echo "missing command argument" >&2
 	exit 1
 fi
 
@@ -104,7 +104,7 @@ case $command in
 		usage
 	;;
 	*)  # unknown command
-		echo "unknown command '$command'"
+		echo "unknown command '$command'" >&2
 		exit 1
 	;;
 esac
