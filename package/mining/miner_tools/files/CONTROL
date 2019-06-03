@@ -27,7 +27,7 @@ file_size() {
 }
 
 get_miner_cfg() {
-	fw_printenv -c miner_cfg.config -n "$1" 2>/dev/null
+	bos get_factory_cfg "$1" 2>/dev/null
 	return 0
 }
 

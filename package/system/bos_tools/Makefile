@@ -27,6 +27,8 @@ define Package/bos_tools/conffiles
 endef
 
 define Package/bos_tools/install
+	$(INSTALL_DIR) $(1)/etc/
+	$(CP) ./files/factory_cfg.config $(1)/etc
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) ./files/bos.config $(1)/etc/config/bos
 	$(INSTALL_DIR) $(1)/usr/sbin

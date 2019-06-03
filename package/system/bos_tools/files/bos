@@ -4,11 +4,12 @@
 set -e
 
 usage() {
-	echo "usage: bos [-h] {factory_reset,run_recovery,ip_report} ..."
+	echo "usage: bos [-h] {factory_reset,get_factory_cfg,run_recovery,ip_report} ..."
 	echo
 	echo "positional arguments:"
-	echo "  {factory_reset,run_recovery}"
+	echo "  {factory_reset,get_factory_cfg,run_recovery,ip_report}"
 	echo "    factory_reset       reboot and initiate factory reset"
+	echo "    get_factory_cfg     get factory configuration for specified attribute"
 	echo "    run_recovery        reboot to recovery mode"
 	echo "    ip_report           broadcast IP and MAC address of device"
 	echo
@@ -25,6 +26,14 @@ factory_reset() {
 	mtd erase uboot_env
 	# U-Boot load default environment which initiate factory reset
 	reboot
+}
+
+get_factory_cfg() {
+	if [ $# -ne 1 ]; then
+		echo "command 'get_factory_cfg' takes one argument with attribute name" >&2
+		exit 1
+	fi
+	exec fw_printenv -c "/etc/factory_cfg.config" -n "$1"
 }
 
 run_recovery() {
@@ -96,7 +105,7 @@ fi
 command="$1"
 
 case $command in
-	factory_reset|run_recovery|ip_report)
+	factory_reset|get_factory_cfg|run_recovery|ip_report)
 		shift
 		$command "$@"
 	;;

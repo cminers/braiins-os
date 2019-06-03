@@ -6,11 +6,12 @@
 set -e
 
 usage() {
-	echo "usage: miner [-h] {factory_reset,run_recovery,ip_report,fault_light,nand_install} ..."
+	echo "usage: miner [-h] {factory_reset,get_factory_cfg,run_recovery,ip_report,fault_light,nand_install} ..."
 	echo
 	echo "positional arguments:"
-	echo "  {factory_reset,run_recovery,ip_report,fault_light,nand_install}"
+	echo "  {factory_reset,get_factory_cfg,run_recovery,ip_report,fault_light,nand_install}"
 	echo "    factory_reset       reboot and initiate factory reset"
+	echo "    get_factory_cfg     get factory configuration for specified attribute"
 	echo "    run_recovery        reboot to recovery mode"
 	echo "    ip_report           broadcast IP and MAC address of device"
 	echo "    fault_light         turn on or off miner's fault LED"
@@ -22,6 +23,10 @@ usage() {
 
 factory_reset() {
 	exec bos factory_reset "$@"
+}
+
+get_factory_cfg() {
+	exec bos get_factory_cfg "$@"
 }
 
 run_recovery() {
@@ -85,7 +90,6 @@ nand_install() {
 
 	# copy auxiliary scripts
 	cp /usr/share/upgrade/CONFIG .
-	cp /usr/share/upgrade/miner_cfg.config .
 
 	# prepare attributes for stage1 script
 	local miner_hwid=$(cat /tmp/miner_hwid)
@@ -121,7 +125,8 @@ fi
 command="$1"
 
 case $command in
-	factory_reset|run_recovery|ip_report|fault_light|nand_install)
+	factory_reset|get_factory_cfg|run_recovery|ip_report|\
+	fault_light|nand_install)
 		shift
 		$command "$@"
 	;;

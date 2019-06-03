@@ -40,7 +40,6 @@ define Package/miner_tools/install
 	$(INSTALL_BIN) ./files/miner $(1)/usr/sbin/
 	$(INSTALL_DIR) $(1)/usr/share/upgrade
 	$(CP) ./files/CONTROL $(1)/usr/share/upgrade/CONTROL.bos
-	$(CP) ./files/miner_cfg.config $(1)/usr/share/upgrade/
 	$(call Package/miner_tools/subtarget_install,$(1))
 endef
 
