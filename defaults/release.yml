@@ -13,6 +13,7 @@ core:
     - kmod-lib-crc-ccitt
     - kmod-nf-conntrack6
     - kmod-nf-ipt6
+    - kmod-tun
     - libcurl
     - libiwinfo
     - libiwinfo-lua
