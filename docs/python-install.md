@@ -1,6 +1,6 @@
 # How to install Python 3
 
-You have to have Python 3 to migrate to Braiins OS and run all the `*.py` scripts. This guide describes how to install Python 3 and other required tools.
+You must have Python 3 to migrate to Braiins OS and run all the `*.py` scripts. This guide describes how to install Python 3 and other required tools.
 
 ## Linux
 
@@ -53,14 +53,13 @@ While using Ubuntu on Windows, **follow the instructions for Linux**.
 1. [Download Python](https://www.python.org/downloads/windows/) (version 3.5.4 is recommended)
 2. Run the downloaded installer
 3.  Click 'Customize installation'
-4. Check if 'pip' is selected for installation
+4. Make sure that 'pip' is selected for installation
 5. Select 'Add Python to environment variables'
 6. Finish the installation
 
 #### Check if python is in your PATH
-  After the installation is complete double check to make sure you see python in your PATH.
-  You can find your path by opening your *Control panel
-  -> System and Security -> System -> Advanced System Settings -> Environment Variables -> Selecting Path -> Edit*.
+  After the installation is complete, double check to make sure you see python in your PATH.
+  You can find your path by opening your *Control panel  -> System and Security -> System -> Advanced System Settings -> Environment Variables -> Selecting Path -> Edit*.
 
 #### Install the environment
 Run command line (cmd) and install virtualenv.

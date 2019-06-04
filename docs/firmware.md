@@ -16,19 +16,18 @@
 
 ### boot
 
-The partition contains U-Boot *SPL* (Secondary Program Loader). This small boot loader is stripped-down version of
-U-Boot and do initial hardware configuration and load the larger, fully featured version of U-Boot.
+The partition contains U-Boot *SPL* (Secondary Program Loader). This small boot loader is a stripped-down version of U-Boot which can be used to do an initial hardware configuration and load the larger, fully-featured version of U-Boot.
 
 The *SPL* supports booting from SD and NAND configured for a DragonMint miner.
 
 ### uboot
 
 The U-Boot legacy uImage with minor modification to control loading Linux kernel from various sources (NAND, SD, ...).
-Default script supports following features:
+Default script supports the following features:
 
 * NAND boot,
 * SD boot,
-* auto recovery feature (return back previous firmware when new one does not work),
+* auto-recovery feature (return back previous firmware when new one does not work),
 * recovery mode (boot to special factory image),
 * factory reset (use recovery mode for resetting miner to default configuration),
 * environment overloading with *uEnv.txt*,
@@ -39,14 +38,11 @@ Default script supports following features:
 ### fpga
 
 This partition contains the programming information (bitstream) for an FPGA. There are actually two partitions.
-Only one partition is active at a time. This partition always contains the latest released version of bitstream and is used during auto
-recovery process.
+Only one partition is active at a time. This partition always contains the latest released version of bitstream and is used during the auto-recovery process.
 
 ### uboot_env
 
-This partition contains U-Boot redundant environment. This configuration uses two environments. When the second environment
-gets corrupted, U-Boot tries to recover data from the first one. Linux U-Boot firmware tools (*fw_printenv*,
-*fw_setenv*) have to be configured in *fw_env.config* as follows:
+This partition contains a U-Boot redundant environment. This configuration uses two environments. When the second environment gets corrupted, U-Boot tries to recover data from the first one. Linux U-Boot firmware tools (*fw_printenv*, *fw_setenv*) have to be configured in *fw_env.config* as follows:
 
 ```
 # MTD device name   Device offset   Env. size   Flash sector size
@@ -56,22 +52,18 @@ gets corrupted, U-Boot tries to recover data from the first one. Linux U-Boot fi
 
 ### miner_cfg
 
-This partition uses U-Boot environment for storing unique information about miner and is written only once during factory
-programming or initial upgrade from original firmware. The data is also stored in redundant environment format because
-U-Boot can be configured only for one format. However, it does not use the second data storage. The environment stores
-the following information:
+This partition uses U-Boot environment for storing unique information about miners and is written only once during factory programming or the initial upgrade from original firmware. The data is also stored in a redundant environment format because U-Boot can be configured for only one format. However, it does not use the second data storage. The environment stores the following information:
 
 * MAC address,
 * miner HWID,
 * default pool settings.
 
-This data are used during factory reset to restore the initial configuration.
+These data are used during factory reset to restore the initial configuration.
 
 ### recovery
 
-This is read-only partition. It is created during factory programming or initial upgrade from original firmware.
-When U-Boot is not corrupted this partition can be used for miner recovery. The recovery image is logically divided
-to three partitions:
+This is read-only partition. It is created during factory programming or the initial upgrade from original firmware.
+When U-Boot is not corrupted, this partition can be used for miner recovery. The recovery image is logically divided into three partitions:
 
 | Address               | Size       | Name      |
 |:---------------------:|:----------:| --------- |
@@ -79,23 +71,15 @@ to three partitions:
 | 0x00800000-0x01400000 | 0x00c00000 | factory   |
 | 0x01400000-0x01600000 | 0x00200000 | fpga      |
 
-The *kernel* partition contains an U-Boot *FIT* image with a gzipped Linux kernel image, *DTB* image and read-only root
-filesystem (*SquashFS*). A writable overlay uses non-persistent *tmpfs*. The image is loaded by the U-Boot when recovery
-mode is detected.
+The *kernel* partition contains a U-Boot *FIT* image with a gzipped Linux kernel image, *DTB* image, and read-only root filesystem (*SquashFS*). A writable overlay uses non-persistent *tmpfs*. The image is loaded by the U-Boot when recovery mode is detected.
 
-The *factory* partition contains *UBI* image compatible with *ubiformat* and used for factory reset. The factory reset
-is automatically initiated from the recovery mode during boot process when variable `factory_reset=yes` is set in the
-U-Boot environment. Default environment has set this variable so when the *uboot_env* is deleted and automatically
-restored by U-Boot, the factory reset is run.
+The *factory* partition contains a *UBI* image compatible with *ubiformat* and used for factory reset. The factory reset is automatically initiated from the recovery mode during the boot process when variable `factory_reset=yes` is set in the U-Boot environment. This variable is set in the default environment such that the factory reset is run when the *uboot_unv* is deleted and automatically restored by U-Boot.
 
-The U-Boot loads FPGA with bitstream from the recovery *fpga* partition when booting to recovery mode. This bitstream is
-also used during factory reset. 
+The U-Boot loads FPGA with bitstream from the recovery *fpga* partition when booting to recovery mode. This bitstream is also used during factory reset. 
 
 ### firmware
 
-An *UBI* partition with three dynamic partitions contains a Linux kernel, read-only root file system and writable
-overlay. There are actually two partitions. Only one partition is active. This partition always contains functional
-version of firmware and is used during auto recovery process.
+A *UBI* partition with three dynamic partitions contains a Linux kernel, read-only root file system, and writable overlay. There are actually two partitions. Only one partition is active. This partition always contains a functional version of firmware and is used during the auto-recovery process.
 
 | Name   | File System        |
 | ------ | ------------------ |
@@ -107,13 +91,11 @@ version of firmware and is used during auto recovery process.
 
 ## SD Boot
 
-It is possible to boot from SD card without opening miner and connecting HW jumper on a control board. The U-Boot loader
-booted from a NAND tries to detect inserted SD card. When first partition with FAT contains a file *uEnv.txt* with a
-line **sd_boot=yes** then the U-Boot tries to load FIT image from SD card. *However, the U-Boot from SD is not used!*
+It is possible to boot from a SD card without opening the miner and connecting HW jumper on a control board. The U-Boot loader booted from a NAND tries to detect an inserted SD card. If the first partition with FAT contains a file *uEnv.txt* with a line **sd_boot=yes**, then the U-Boot tries to load FIT image from SD card. *However, the U-Boot from SD is not used!*
 
 ## Firmware Upgrade
 
-The first method is to use an *opkg* utility. It downloads firmware meta-package from the feeds server:
+The first method is to use an *opkg* utility. It downloads a firmware meta-package from the feeds server:
 
 ```bash
 # download latest packages from feeds server
@@ -122,7 +104,7 @@ $ opkg update
 $ opkg install firmware
 ```
 
-The second option is to download sysupgrade tarball and update miner from web interface or from commandline:
+The second option is to download *sysupgrade tarball* and update the miner from a web interface or from the command line:
 
 ```bash
 # download latest firmware tarball
