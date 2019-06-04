@@ -124,4 +124,7 @@ fw_setenv --script - <<-EOF
 	recovery_net_gateway
 	recovery_net_dns_servers
 	recovery_net_hostname
+	# after successful recovery boot delete environment
+	# variable 'first_boot' to allow standard boot process
+	first_boot
 EOF
