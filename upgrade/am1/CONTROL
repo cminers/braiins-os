@@ -27,7 +27,7 @@ file_size() {
 
 get_bm_config() {
 	tr -d '\n' < /config/bmminer.conf | \
-	sed -n 's/.*"'$1'":[ "]*\([^ ",}]*\).*/\1/p'
+	sed -n 's/.*"'$1'" *:[ "]*\([^ ",}]*\).*/\1/p'
 }
 
 get_net_config() {
