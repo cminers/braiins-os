@@ -8,6 +8,7 @@
 - [feature] it is now possible to install bOS into flash memory from a running **SD card** - see the docs for details
 - [feature] increase stratum connect() timeout to 3 seconds to prevent harassing stratum servers to early when probing all IP address for a given URL
 - [feature] attempt to perform ```opkg install firmware``` on bOS instance **running from SD card** now visibly tells the user that this is not a supported operation (= you should obtain a new SD card image and write it to your SD card)
+- [feature] **TUN/TAP module** is now part of the base system as we cannot use upstream modules due to custom kernel. These can be useful for OpenVPN
 - [bug] ```#xnsub``` support for NH stratum extension has been fixed
 - [bug] a few **memory leaks** in bmminer and cgminer API have been fixed
 
