@@ -1,3 +1,5 @@
+# 2019-06-05-0
+
 ## All mining hardware types
 
 - [feature] YES, we have a **new logo** that is consistent with the new Braiins logo, hope, you like it ;-)
