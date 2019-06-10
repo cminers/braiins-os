@@ -327,8 +327,8 @@ T1 | 89&deg;C | 95&deg;C | 105&deg;C
 The 'hot' and 'dangerous' temperature limits can be overriden in ```/etc/cgminer.conf``` e.g.:
 
 ```
-fan-temp-hot: "91"
-fan-temp-dangerous: "96"
+fan-hot-temp: "91"
+fan-dangerous-temp: "96"
 ```
 
 These options have no representation in the web interface as they are considered advanced.

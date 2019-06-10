@@ -25,7 +25,7 @@
 
 ## All mining hardware types
 
-- [feature] **temperature limits** are now configurable via configuration file. The two new configuration options are: ```--fan-temp-hot``` and ```--fan-temp-dangerous```. These options effectively override the temp limits in ```temp-def.h```
+- [feature] **temperature limits** are now configurable via configuration file. The two new configuration options are: ```--fan-hot-temp``` and ```--fan-dangerous-temp```. These options effectively override the temp limits in ```temp-def.h```
 - [fix] **15m** and **24h hash rate** shows up only if the **full time period** of hash rate data has been collected
 - [fix] enabled/disabled **indicator** for **Asic Boost** now works again in the overview status page
 - [feature] **fan control** now has a new option ```--min-fans``` that specifies the minimum amount of fans that have to be operational (defaults to 1). Setting the option to "0" results in skipping the check for working fans.
